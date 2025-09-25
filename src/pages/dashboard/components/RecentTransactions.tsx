@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 import type { TransacaoResponse } from "@/types";
 import { formatCurrency } from "@/utils";
 import { TrendingDown, TrendingUp } from "lucide-react";
@@ -25,8 +26,9 @@ export function RecentTransactions({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-center items-center h-32">
-            <p className="text-gray-500 dark:text-gray-400">
+          <div className="flex flex-col items-center justify-center py-8 space-y-3">
+            <Spinner size="md" />
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
               Carregando transações...
             </p>
           </div>

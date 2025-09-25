@@ -49,6 +49,11 @@ export interface CreateTransacaoRequest {
   tipo: "RECEITA" | "DESPESA";
   categoriaId: string;
   observacoes?: string;
+  // Campos para transações recorrentes
+  recorrente: boolean;
+  quantidadeParcelas?: number; // Quantas vezes se repete (2x, 3x, etc)
+  tipoRecorrencia?: "MENSAL"; // Sempre mensal por padrão
+  valorTotalOriginal?: number; // Calculado automaticamente (valor × quantidade)
 }
 
 export interface UpdateTransacaoRequest {
@@ -58,6 +63,8 @@ export interface UpdateTransacaoRequest {
   tipo?: "RECEITA" | "DESPESA";
   categoriaId?: string;
   observacoes?: string;
+  // Para recorrentes, permitir atualizar apenas a transação atual ou todas
+  atualizarTodasRecorrencias?: boolean;
 }
 
 // Tipos para resposta da API
@@ -72,7 +79,7 @@ export interface CategoriaResponse {
 }
 
 export interface TransacaoResponse {
-  id: number;
+  id: string; // Mudando para string (UUID)
   descricao: string;
   valor: number;
   dataTransacao: string;
@@ -83,6 +90,13 @@ export interface TransacaoResponse {
   observacoes?: string;
   dataCriacao: string;
   dataAtualizacao?: string;
+  // Campos para transações recorrentes
+  recorrente: boolean;
+  quantidadeParcelas?: number; // Quantas vezes se repete (2x, 3x, etc)
+  parcelaAtual?: number; // Qual parcela atual (1, 2, 3...)
+  transacaoPaiId?: string; // ID da transação original que gerou as recorrentes
+  valorTotal?: number; // Valor total (valor × quantidade)
+  tipoRecorrencia?: "MENSAL"; // Sempre mensal
 }
 
 // Tipos para filtros e paginação

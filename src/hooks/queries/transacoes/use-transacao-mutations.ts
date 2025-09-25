@@ -12,8 +12,13 @@ export function useCreateTransacao() {
   return useMutation({
     mutationFn: (data: CreateTransacaoRequest) => transacaoService.create(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transacoes"] });
-      queryClient.invalidateQueries({ queryKey: ["resumo-financeiro"] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.transacoes() });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.transacoesRecorrentes,
+      });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.resumoFinanceiro(),
+      });
     },
   });
 }
@@ -25,14 +30,19 @@ export function useUpdateTransacao() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateTransacaoRequest }) =>
+    mutationFn: ({ id, data }: { id: string; data: UpdateTransacaoRequest }) =>
       transacaoService.update(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["transacoes"] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.transacoes() });
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.transacao(variables.id),
       });
-      queryClient.invalidateQueries({ queryKey: ["resumo-financeiro"] });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.transacoesRecorrentes,
+      });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.resumoFinanceiro(),
+      });
     },
   });
 }
@@ -44,10 +54,15 @@ export function useDeleteTransacao() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => transacaoService.delete(id),
+    mutationFn: (id: string) => transacaoService.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["transacoes"] });
-      queryClient.invalidateQueries({ queryKey: ["resumo-financeiro"] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.transacoes() });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.transacoesRecorrentes,
+      });
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.resumoFinanceiro(),
+      });
     },
   });
 }

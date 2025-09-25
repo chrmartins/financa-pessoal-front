@@ -10,7 +10,7 @@ export interface TransacoesParams {
   size?: number;
   dataInicio?: string;
   dataFim?: string;
-  categoriaId?: number;
+  categoriaId?: string;
   tipo?: "RECEITA" | "DESPESA";
 }
 
@@ -27,7 +27,7 @@ export function useTransacoes(params?: TransacoesParams) {
 /**
  * Hook para buscar uma transação específica por ID
  */
-export function useTransacao(id: number) {
+export function useTransacao(id: string) {
   return useQuery({
     queryKey: QUERY_KEYS.transacao(id),
     queryFn: () => transacaoService.getById(id),

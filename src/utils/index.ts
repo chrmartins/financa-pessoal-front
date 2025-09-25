@@ -5,11 +5,52 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(value: number): string {
+export function formatCurrency(value: number | undefined | null): string {
+  // Tratar valores nulos, undefined ou NaN
+  const numericValue = Number(value) || 0;
+
+  if (isNaN(numericValue)) {
+    return "R$ 0,00";
+  }
+
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
-  }).format(value);
+  }).format(numericValue);
+}
+
+/**
+ * Formatar entrada de moeda conforme usuário digita
+ */
+export function formatCurrencyInput(value: string): string {
+  // Remover tudo exceto dígitos
+  const digits = value.replace(/\D/g, "");
+
+  if (!digits) return "";
+
+  // Converter para cents
+  const cents = parseInt(digits);
+  const reais = cents / 100;
+
+  // Formatar como moeda brasileira sem símbolo R$
+  return reais.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+/**
+ * Parsear string formatada de volta para número
+ */
+export function parseCurrencyInput(value: string): number {
+  if (!value || value.trim() === "") {
+    return 0;
+  }
+
+  // Remover pontos (milhares) e substituir vírgula por ponto (decimais)
+  const cleaned = value.replace(/\./g, "").replace(",", ".");
+  const parsed = parseFloat(cleaned);
+  return isNaN(parsed) ? 0 : parsed;
 }
 
 export function formatDate(date: Date | string): string {

@@ -6,7 +6,10 @@ export const QUERY_KEYS = {
 
   // Transações
   transacoes: (filters?: any) => ["transacoes", filters] as const,
-  transacao: (id: number) => ["transacoes", id] as const,
+  transacao: (id: string) => ["transacoes", id] as const,
+
+  // Transações Recorrentes
+  transacoesRecorrentes: ["transacoes", "recorrentes"] as const,
 
   // Resumo Financeiro
   resumoFinanceiro: (params?: any) => ["resumo-financeiro", params] as const,

@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { type ReactNode } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import { Logo } from "./logo.tsx";
 
@@ -104,14 +104,14 @@ export function Layout({ children }: LayoutProps) {
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-16 items-center justify-between px-4 border-b border-white/10 dark:border-gray-700/30">
+          <div className="h-16 border-b border-white/10 dark:border-gray-700/30 relative grid place-items-center">
             <Logo />
             {isMobile && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={toggleSidebar}
-                className="lg:hidden"
+                className="lg:hidden absolute right-4 top-1/2 transform -translate-y-1/2"
               >
                 <X className="h-5 w-5" />
               </Button>
@@ -123,9 +123,9 @@ export function Layout({ children }: LayoutProps) {
             {menuItems.map((item) => {
               const isActive = location.pathname === item.href;
               return (
-                <a
+                <Link
                   key={item.href}
-                  href={item.href}
+                  to={item.href}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 group",
                     isActive
@@ -135,7 +135,7 @@ export function Layout({ children }: LayoutProps) {
                 >
                   <item.icon className="h-5 w-5 transition-transform group-hover:scale-110" />
                   {item.title}
-                </a>
+                </Link>
               );
             })}
           </nav>
@@ -196,7 +196,9 @@ export function Layout({ children }: LayoutProps) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
+        <main className="flex-1 p-4 md:p-6 lg:p-8 transition-page">
+          {children}
+        </main>
       </div>
 
       {/* Toast Container */}

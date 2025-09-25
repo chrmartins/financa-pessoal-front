@@ -84,4 +84,33 @@
   .card-gradient {
     @apply bg-white/95 dark:bg-gray-800/80 backdrop-blur-sm border border-white/30 dark:border-gray-700/50 shadow-lg;
   }
+
+  /* Otimizações para navegação suave */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    transition: background-color 0.3s ease;
+  }
+
+  /* Prevenção de flash durante navegação */
+  .transition-page {
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+  }
+
+  .transition-page-enter {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  .transition-page-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

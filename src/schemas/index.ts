@@ -22,22 +22,39 @@ export const categoriaSchema = z.object({
 
 export const updateCategoriaSchema = categoriaSchema.partial();
 
-// Schema para Transação
-export const transacaoSchema = z.object({
-  descricao: z
-    .string()
-    .min(1, "Descrição é obrigatória")
-    .min(3, "Descrição deve ter pelo menos 3 caracteres")
-    .max(100, "Descrição deve ter no máximo 100 caracteres"),
-  valor: z
-    .number()
-    .positive("Valor deve ser positivo")
-    .max(999999.99, "Valor deve ser menor que R$ 999.999,99"),
-  dataTransacao: z.string().min(1, "Data é obrigatória"),
-  tipo: z.enum(["RECEITA", "DESPESA"]),
-  categoriaId: z.string().min(1, "Categoria deve ser válida"),
-  observacoes: z.string().optional(),
-});
+// Schema para Transação (com recorrência)
+export const transacaoSchema = z
+  .object({
+    descricao: z
+      .string()
+      .min(1, "Descrição é obrigatória")
+      .min(3, "Descrição deve ter pelo menos 3 caracteres")
+      .max(100, "Descrição deve ter no máximo 100 caracteres"),
+    valor: z
+      .number()
+      .positive("Valor deve ser positivo")
+      .max(999999.99, "Valor deve ser menor que R$ 999.999,99"),
+    dataTransacao: z.string().min(1, "Data é obrigatória"),
+    tipo: z.enum(["RECEITA", "DESPESA"]),
+    categoriaId: z.string().min(1, "Categoria deve ser válida"),
+    observacoes: z.string().optional(),
+    // Campos para recorrência
+    recorrente: z.boolean().default(false),
+    quantidadeParcelas: z.number().min(2).max(60).optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.recorrente) {
+        return data.quantidadeParcelas && data.quantidadeParcelas >= 2;
+      }
+      return true;
+    },
+    {
+      message:
+        "Para transações recorrentes, defina quantas vezes se repetirá (mínimo 2x)",
+      path: ["quantidadeParcelas"],
+    }
+  );
 
 export const updateTransacaoSchema = transacaoSchema.partial();
 

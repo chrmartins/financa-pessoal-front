@@ -5,15 +5,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -21,23 +14,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useCategorias } from "@/hooks/queries/categorias/use-categorias";
 import { useCreateTransacao } from "@/hooks/queries/transacoes/use-transacao-mutations";
-import { useUpdateTransacao } from "@/hooks/queries/transacoes/use-update-transacao";
-import type { TransacaoFormData } from "@/schemas";
-import { transacaoSchema } from "@/schemas";
-import type { TransacaoResponse, UpdateTransacaoRequest } from "@/types";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import type { CreateTransacaoRequest, TransacaoResponse } from "@/types";
+import { formatCurrencyInput, parseCurrencyInput } from "@/utils";
+import { CalendarDays, Clock, Loader2, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface TransacaoModalProps {
   open: boolean;
   onClose: () => void;
-  transacao?: TransacaoResponse | null; // Se fornecido, é edição; se null/undefined, é criação
+  transacao?: TransacaoResponse | null;
 }
 
 export function TransacaoModal({
@@ -46,357 +36,361 @@ export function TransacaoModal({
   transacao,
 }: TransacaoModalProps) {
   const isEditing = Boolean(transacao);
-  const { mutate: createTransacao } = useCreateTransacao();
-  const updateTransacao = useUpdateTransacao();
-
-  const { data: categorias = [], isLoading: categoriasLoading } =
+  const { mutate: createTransacao, isPending: isCreating } =
+    useCreateTransacao();
+  const { data: categorias = [], isLoading: loadingCategorias } =
     useCategorias();
 
-  const form = useForm<TransacaoFormData>({
-    resolver: zodResolver(transacaoSchema),
-    defaultValues: {
-      descricao: "",
-      valor: 0,
-      dataTransacao: new Date().toISOString().split("T")[0],
-      tipo: "DESPESA",
-      categoriaId: "",
-      observacoes: "",
-    },
-  });
+  // Estados do formulário
+  const [descricao, setDescricao] = useState("");
+  const [valor, setValor] = useState<number>(0);
+  const [valorFormatado, setValorFormatado] = useState(""); // Novo estado para exibição
+  const [dataTransacao, setDataTransacao] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const [tipo, setTipo] = useState<"RECEITA" | "DESPESA">("DESPESA");
+  const [categoriaId, setCategoriaId] = useState("");
+  const [observacoes, setObservacoes] = useState("");
+  const [recorrente, setRecorrente] = useState(false);
+  const [quantidadeParcelas, setQuantidadeParcelas] = useState<number>(2);
 
-  const watchedTipo = form.watch("tipo");
-
-  // Carregar dados da transação quando for edição
+  // Resetar formulário quando abrir/fechar modal
   useEffect(() => {
-    if (isEditing && transacao && open) {
-      console.log("🔍 Debug - Transação para edição:", transacao);
-      console.log("🔍 Debug - Categoria da transação:", transacao.categoria);
-      console.log("🔍 Debug - CategoriaId:", transacao.categoriaId);
-      console.log("🔍 Debug - Categorias disponíveis:", categorias);
-
-      // Tentar encontrar a categoria correspondente
-      let categoriaIdParaUsar = "";
-
-      // Prioridade 1: Usar o ID da categoria diretamente se existe
-      if (transacao.categoria?.id) {
-        categoriaIdParaUsar = transacao.categoria.id;
-      }
-      // Prioridade 2: Tentar encontrar por nome da categoria
-      else if (transacao.categoria?.nome) {
-        const categoriaEncontrada = categorias.find(
-          (cat) =>
-            cat.nome === transacao.categoria?.nome &&
-            cat.tipo === transacao.tipo
-        );
-        categoriaIdParaUsar = categoriaEncontrada?.id || "";
-      }
-      // Prioridade 3: Usar o categoriaId convertido
-      else if (transacao.categoriaId) {
-        categoriaIdParaUsar = transacao.categoriaId.toString();
-      }
-
-      console.log(
-        "🔍 Debug - CategoriaId que será usado:",
-        categoriaIdParaUsar
-      );
-
-      form.reset({
-        descricao: transacao.descricao,
-        valor: transacao.valor,
-        dataTransacao: transacao.dataTransacao,
-        tipo: transacao.tipo,
-        categoriaId: categoriaIdParaUsar,
-        observacoes: transacao.observacoes || "",
-      });
-    } else if (!isEditing && open) {
-      // Reset para valores padrão quando for criação
-      form.reset({
-        descricao: "",
-        valor: 0,
-        dataTransacao: new Date().toISOString().split("T")[0],
-        tipo: "DESPESA",
-        categoriaId: "",
-        observacoes: "",
-      });
-    }
-  }, [isEditing, transacao, open, form, categorias]);
-
-  // Resetar formulário quando fechar
-  useEffect(() => {
-    if (!open) {
-      form.reset();
-    }
-  }, [open, form]);
-
-  const onSubmit = async (data: TransacaoFormData) => {
-    try {
-      if (isEditing && transacao) {
-        // Atualizar transação existente
-        const updateData: UpdateTransacaoRequest = {
-          descricao: data.descricao,
-          valor: data.valor,
-          dataTransacao: data.dataTransacao,
-          categoriaId: data.categoriaId,
-          observacoes: data.observacoes,
-        };
-
-        await updateTransacao.mutateAsync({
-          id: transacao.id,
-          data: updateData,
-        });
-
-        toast.success("Transação atualizada com sucesso!", {
-          description: `${data.descricao} foi atualizada.`,
-        });
+    if (open) {
+      if (transacao) {
+        setDescricao(transacao.descricao);
+        setValor(transacao.valor);
+        // Converter número de volta para string formatada
+        const valorEmCents = Math.round(transacao.valor * 100).toString();
+        setValorFormatado(formatCurrencyInput(valorEmCents));
+        setDataTransacao(transacao.dataTransacao);
+        setTipo(transacao.tipo);
+        setCategoriaId(transacao.categoria.id);
+        setObservacoes(transacao.observacoes || "");
+        setRecorrente(transacao.recorrente || false);
+        setQuantidadeParcelas(transacao.quantidadeParcelas || 2);
       } else {
-        // Criar nova transação
-        createTransacao(data, {
-          onSuccess: () => {
-            toast.success("Transação criada com sucesso!", {
-              description: `${
-                data.tipo === "RECEITA" ? "Receita" : "Despesa"
-              } de ${new Intl.NumberFormat("pt-BR", {
-                style: "currency",
-                currency: "BRL",
-              }).format(data.valor)} foi adicionada.`,
-            });
-            onClose();
-            form.reset();
-          },
-          onError: () => {
-            toast.error("Erro ao criar transação", {
-              description: "Ocorreu um erro inesperado.",
-            });
-          },
-        });
-        return; // Não chama onClose() aqui porque já está no onSuccess
+        // Limpar formulário para nova transação
+        setDescricao("");
+        setValor(0);
+        setValorFormatado("");
+        setDataTransacao(new Date().toISOString().split("T")[0]);
+        setTipo("DESPESA");
+        setCategoriaId("");
+        setObservacoes("");
+        setRecorrente(false);
+        setQuantidadeParcelas(2);
       }
-
-      onClose();
-      form.reset();
-    } catch (error) {
-      console.error("Erro ao salvar transação:", error);
-      toast.error("Erro ao atualizar transação", {
-        description: "Ocorreu um erro inesperado.",
-      });
     }
+  }, [open, transacao]);
+
+  // Função para formatar valor conforme usuário digita
+  const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+    const formatted = formatCurrencyInput(inputValue);
+    setValorFormatado(formatted);
+
+    // Converter para número para armazenar no estado
+    const numericValue = parseCurrencyInput(formatted);
+    console.log(
+      `💰 Valor formatado: "${formatted}" → Numérico: ${numericValue}`
+    );
+    setValor(numericValue);
   };
 
-  // Filtrar categorias por tipo
-  const categoriasFiltradas = categorias.filter(
-    (categoria) => categoria.tipo === watchedTipo
-  );
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
-  console.log("🔍 Debug - Tipo selecionado:", watchedTipo);
-  console.log("🔍 Debug - Categorias filtradas:", categoriasFiltradas);
-  console.log(
-    "🔍 Debug - Valor atual do campo categoriaId:",
-    form.watch("categoriaId")
-  );
+    console.log("🚀 Iniciando criação de transação:", {
+      descricao,
+      valor,
+      recorrente,
+      quantidadeParcelas: recorrente ? quantidadeParcelas : "N/A",
+    });
 
-  const isSubmitting = updateTransacao.isPending;
+    // Validações básicas
+    if (!descricao.trim()) {
+      toast.error("Descrição é obrigatória");
+      return;
+    }
+
+    // Validação aprimorada do valor
+    const valorNumerico = Number(valor);
+    if (!valorNumerico || valorNumerico <= 0 || isNaN(valorNumerico)) {
+      toast.error("Valor deve ser um número maior que zero");
+      console.log("❌ Valor inválido:", {
+        valor,
+        valorNumerico,
+        isNaN: isNaN(valorNumerico),
+      });
+      return;
+    }
+
+    if (!categoriaId) {
+      toast.error("Selecione uma categoria");
+      return;
+    }
+    if (recorrente && quantidadeParcelas < 2) {
+      toast.error("Para transações recorrentes, defina pelo menos 2 parcelas");
+      return;
+    }
+
+    const requestData: CreateTransacaoRequest = {
+      descricao,
+      valor: valorNumerico, // Garantir que seja número
+      dataTransacao,
+      tipo,
+      categoriaId,
+      observacoes,
+      recorrente,
+      quantidadeParcelas: recorrente ? quantidadeParcelas : undefined,
+      tipoRecorrencia: recorrente ? "MENSAL" : undefined,
+      valorTotalOriginal: recorrente
+        ? valorNumerico * quantidadeParcelas
+        : undefined,
+    };
+
+    console.log("📦 Dados sendo enviados para API:", requestData);
+
+    createTransacao(requestData, {
+      onSuccess: (data) => {
+        console.log("✅ Transação criada com sucesso:", data);
+        if (recorrente) {
+          toast.success(
+            `${quantidadeParcelas} transações recorrentes criadas com sucesso!`
+          );
+        } else {
+          toast.success("Transação criada com sucesso!");
+        }
+        onClose();
+      },
+      onError: (error) => {
+        console.error("❌ Erro ao criar transação:", error);
+        toast.error("Erro ao criar transação");
+      },
+    });
+  };
+
+  // Opções de quantidade de recorrências
+  const opcoesQuantidade = [
+    ...Array.from({ length: 23 }, (_, i) => i + 2), // 2 a 24
+    30,
+    36,
+    48,
+    60, // Opções extras para financiamentos
+  ];
+
+  const getExemploTexto = () => {
+    if (!recorrente || !quantidadeParcelas || !valor) return "";
+
+    const totalValue = valor * quantidadeParcelas;
+    const tipoTexto = tipo === "RECEITA" ? "receita" : "despesa";
+
+    return `${quantidadeParcelas}x ${tipoTexto}s mensais de ${valor.toLocaleString(
+      "pt-BR",
+      { style: "currency", currency: "BRL" }
+    )} = ${totalValue.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    })} total`;
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-gray-900 dark:text-gray-100">
-            {isEditing ? "Editar Transação" : "Nova Transação"}
+          <DialogTitle className="flex items-center gap-2">
+            {isEditing ? (
+              <>
+                <Clock className="h-5 w-5" />
+                Editar Transação
+              </>
+            ) : (
+              <>
+                <CalendarDays className="h-5 w-5" />
+                Nova Transação
+              </>
+            )}
           </DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Descrição */}
-            <FormField
-              control={form.control}
-              name="descricao"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700 dark:text-gray-300">
-                    Descrição *
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Ex: Supermercado, Salário..."
-                      className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Descrição */}
+          <div>
+            <Label htmlFor="descricao">Descrição</Label>
+            <Input
+              id="descricao"
+              placeholder="Ex: iPhone, Netflix, Salário..."
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
             />
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              {/* Valor */}
-              <FormField
-                control={form.control}
-                name="valor"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-700 dark:text-gray-300">
-                      Valor *
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="0,00"
-                        className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
-                        {...field}
-                        onChange={(e) =>
-                          field.onChange(parseFloat(e.target.value) || 0)
-                        }
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Data */}
-              <FormField
-                control={form.control}
-                name="dataTransacao"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-700 dark:text-gray-300">
-                      Data *
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        type="date"
-                        className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+          {/* Valor */}
+          <div>
+            <Label htmlFor="valor">
+              Valor {recorrente ? "de cada parcela/mês" : ""}
+            </Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                R$
+              </span>
+              <Input
+                id="valor"
+                type="text"
+                placeholder="0,00"
+                className="pl-8"
+                value={valorFormatado}
+                onChange={handleValorChange}
               />
             </div>
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              {/* Tipo */}
-              <FormField
-                control={form.control}
-                name="tipo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-700 dark:text-gray-300">
-                      Tipo *
-                    </FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        form.setValue("categoriaId", ""); // Reset categoria quando mudar tipo
-                      }}
-                      defaultValue={field.value}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100">
-                          <SelectValue placeholder="Selecione o tipo" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="RECEITA">Receita</SelectItem>
-                        <SelectItem value="DESPESA">Despesa</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Categoria */}
-              <FormField
-                control={form.control}
-                name="categoriaId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-700 dark:text-gray-300">
-                      Categoria *
-                    </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value || ""}
-                      disabled={categoriasLoading || !watchedTipo}
-                    >
-                      <FormControl>
-                        <SelectTrigger className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100">
-                          <SelectValue
-                            placeholder={
-                              categoriasLoading
-                                ? "Carregando..."
-                                : !watchedTipo
-                                ? "Selecione o tipo primeiro"
-                                : "Selecione a categoria"
-                            }
-                          />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categoriasFiltradas.map((categoria) => (
-                          <SelectItem key={categoria.id} value={categoria.id}>
-                            {categoria.nome}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          {/* Tipo e Data */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Tipo</Label>
+              <Select
+                value={tipo}
+                onValueChange={(value: "RECEITA" | "DESPESA") => setTipo(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="RECEITA">
+                    <span className="text-green-600">💰 Receita</span>
+                  </SelectItem>
+                  <SelectItem value="DESPESA">
+                    <span className="text-red-600">💸 Despesa</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            {/* Observações */}
-            <FormField
-              control={form.control}
-              name="observacoes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700 dark:text-gray-300">
-                    Observações
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Observações adicionais (opcional)"
-                      className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 resize-none"
-                      rows={3}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+            <div>
+              <Label htmlFor="dataTransacao">
+                Data {recorrente ? "da 1ª parcela" : ""}
+              </Label>
+              <Input
+                id="dataTransacao"
+                type="date"
+                value={dataTransacao}
+                onChange={(e) => setDataTransacao(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Categoria */}
+          <div>
+            <Label>Categoria</Label>
+            <Select
+              value={categoriaId}
+              onValueChange={setCategoriaId}
+              disabled={loadingCategorias}
+            >
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={
+                    loadingCategorias
+                      ? "Carregando categorias..."
+                      : "Selecione uma categoria"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {categorias.map((categoria) => (
+                  <SelectItem key={categoria.id} value={categoria.id}>
+                    {categoria.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Recorrência Simplificada */}
+          <div className="border rounded-lg p-4 bg-muted/30">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <RefreshCw className="h-4 w-4 text-blue-500" />
+                <Label className="font-medium">É recorrente? (mensal)</Label>
+              </div>
+              <Switch checked={recorrente} onCheckedChange={setRecorrente} />
+            </div>
+
+            {recorrente && (
+              <div className="space-y-3">
+                <div>
+                  <Label>Quantas vezes?</Label>
+                  <Select
+                    value={quantidadeParcelas.toString()}
+                    onValueChange={(value) =>
+                      setQuantidadeParcelas(Number(value))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione quantas vezes" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-60">
+                      {opcoesQuantidade.map((quantidade) => (
+                        <SelectItem
+                          key={quantidade}
+                          value={quantidade.toString()}
+                        >
+                          {quantidade}x{" "}
+                          {quantidade <= 12
+                            ? `(${quantidade} ${
+                                quantidade === 1 ? "mês" : "meses"
+                              })`
+                            : `(${Math.round((quantidade / 12) * 10) / 10} ${
+                                quantidade <= 12 ? "ano" : "anos"
+                              })`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Preview da recorrência */}
+                {quantidadeParcelas && valor && (
+                  <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-md">
+                    <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+                      <RefreshCw className="inline h-4 w-4 mr-1" />
+                      {getExemploTexto()}
+                    </p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                      Criará {quantidadeParcelas} transações mensais automáticas
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Observações */}
+          <div>
+            <Label htmlFor="observacoes">Observações (opcional)</Label>
+            <Textarea
+              id="observacoes"
+              placeholder="Informações adicionais..."
+              rows={2}
+              value={observacoes}
+              onChange={(e) => setObservacoes(e.target.value)}
             />
+          </div>
 
-            {/* Botões */}
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                disabled={isSubmitting}
-                className="bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600"
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                {isSubmitting && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                {isEditing ? "Atualizar" : "Criar"}
-              </Button>
-            </div>
-          </form>
-        </Form>
+          {/* Botões */}
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isCreating}>
+              {isCreating && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              {isEditing ? "Atualizar" : "Criar"}
+              {recorrente && ` (${quantidadeParcelas}x)`}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

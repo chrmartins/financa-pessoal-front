@@ -7,7 +7,7 @@ export const useUpdateTransacao = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateTransacaoRequest }) =>
+    mutationFn: ({ id, data }: { id: string; data: UpdateTransacaoRequest }) =>
       transacaoService.update(id, data),
     onSuccess: (data: TransacaoResponse) => {
       // Invalidar e refetch da lista de transações
