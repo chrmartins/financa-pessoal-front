@@ -1,7 +1,11 @@
+import { TransacaoModal } from "@/components/TransacaoModal";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { TransacaoResponse } from "@/types";
 import { formatCurrency } from "@/utils";
-import { TrendingDown, TrendingUp } from "lucide-react";
+import { Edit2, Trash2, TrendingDown, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import { DeleteTransacaoModal } from "./DeleteTransacaoModal";
 
 interface TransacoesListProps {
   transacoes: TransacaoResponse[];
@@ -12,6 +16,31 @@ export function TransacoesList({
   transacoes,
   isLoading = false,
 }: TransacoesListProps) {
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedTransacao, setSelectedTransacao] =
+    useState<TransacaoResponse | null>(null);
+
+  const handleEditClick = (transacao: TransacaoResponse) => {
+    setSelectedTransacao(transacao);
+    setEditModalOpen(true);
+  };
+
+  const handleDeleteClick = (transacao: TransacaoResponse) => {
+    setSelectedTransacao(transacao);
+    setDeleteModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setEditModalOpen(false);
+    setSelectedTransacao(null);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setSelectedTransacao(null);
+  };
+
   if (isLoading) {
     return (
       <Card className="card-gradient dark:bg-gray-800/95 dark:border-gray-700/50">
@@ -84,17 +113,37 @@ export function TransacoesList({
                         )}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p
-                        className={`font-bold text-lg ${
-                          transacao.tipo === "RECEITA"
-                            ? "text-green-600 dark:text-green-400"
-                            : "text-red-600 dark:text-red-400"
-                        }`}
-                      >
-                        {transacao.tipo === "RECEITA" ? "+" : "-"}
-                        {formatCurrency(Math.abs(transacao.valor))}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <p
+                          className={`font-bold text-lg ${
+                            transacao.tipo === "RECEITA"
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-red-600 dark:text-red-400"
+                          }`}
+                        >
+                          {transacao.tipo === "RECEITA" ? "+" : "-"}
+                          {formatCurrency(Math.abs(transacao.valor))}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleEditClick(transacao)}
+                          className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDeleteClick(transacao)}
+                          className="h-8 w-8 p-0 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -108,6 +157,18 @@ export function TransacoesList({
           </div>
         </>
       )}
+
+      {/* Modais */}
+      <TransacaoModal
+        transacao={selectedTransacao}
+        open={editModalOpen}
+        onClose={closeEditModal}
+      />
+      <DeleteTransacaoModal
+        transacao={selectedTransacao}
+        open={deleteModalOpen}
+        onClose={closeDeleteModal}
+      />
     </div>
   );
 }
