@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useModalStore } from "@/stores";
+import { useModalStore } from "@/stores/modals/use-modal-store";
 import { Plus } from "lucide-react";
 
 export function DashboardHeader() {

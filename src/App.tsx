@@ -1,7 +1,7 @@
 import { Layout } from "@/components/layout/layout";
 import { Dashboard } from "@/pages/dashboard";
 import { Transacoes } from "@/pages/transacoes";
-import { useUIStore } from "@/stores";
+import { useUIStore } from "@/stores/ui/use-ui-store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";

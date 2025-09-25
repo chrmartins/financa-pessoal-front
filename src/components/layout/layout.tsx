@@ -1,6 +1,6 @@
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
-import { useUIStore } from "@/stores";
+import { useUIStore } from "@/stores/ui/use-ui-store";
 import { cn } from "@/utils";
 import {
   CreditCard,

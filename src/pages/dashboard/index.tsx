@@ -1,5 +1,5 @@
 import { TransacaoModal } from "@/components/TransacaoModal";
-import { useModalStore } from "@/stores";
+import { useModalStore } from "@/stores/modals/use-modal-store";
 import { useTransacoes } from "../../hooks/queries/transacoes/use-transacoes";
 import { DashboardHeader } from "./components/DashboardHeader";
 import { RecentTransactions } from "./components/RecentTransactions";
