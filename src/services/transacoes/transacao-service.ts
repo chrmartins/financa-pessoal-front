@@ -114,7 +114,6 @@ export const transacaoService = {
     );
 
     return response.data;
-    return response.data;
   },
 
   /**

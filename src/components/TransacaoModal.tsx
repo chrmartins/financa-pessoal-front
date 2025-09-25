@@ -22,9 +22,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { useUpdateTransacao } from "@/hooks/mutations/transacoes/use-update-transacao";
 import { useCategorias } from "@/hooks/queries/categorias/use-categorias";
-import { useCreateTransacao } from "@/hooks/queries/transacoes";
+import { useCreateTransacao } from "@/hooks/queries/transacoes/use-transacao-mutations";
+import { useUpdateTransacao } from "@/hooks/queries/transacoes/use-update-transacao";
 import type { TransacaoFormData } from "@/schemas";
 import { transacaoSchema } from "@/schemas";
 import type { TransacaoResponse, UpdateTransacaoRequest } from "@/types";
@@ -46,8 +46,7 @@ export function TransacaoModal({
   transacao,
 }: TransacaoModalProps) {
   const isEditing = Boolean(transacao);
-  const { mutate: createTransacao, isPending: isCreating } =
-    useCreateTransacao();
+  const { mutate: createTransacao } = useCreateTransacao();
   const updateTransacao = useUpdateTransacao();
 
   const { data: categorias = [], isLoading: categoriasLoading } =

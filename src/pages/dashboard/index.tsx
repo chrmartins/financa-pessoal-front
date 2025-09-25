@@ -1,4 +1,5 @@
-import { SimpleTransactionForm } from "@/components/SimpleTransactionForm";
+import { TransacaoModal } from "@/components/TransacaoModal";
+import { useModalStore } from "@/stores";
 import { useTransacoes } from "../../hooks/queries/transacoes/use-transacoes";
 import { DashboardHeader } from "./components/DashboardHeader";
 import { RecentTransactions } from "./components/RecentTransactions";
@@ -6,6 +7,7 @@ import { SummaryCards } from "./components/SummaryCards";
 import { TrendChart } from "./components/TrendChart";
 
 export function Dashboard() {
+  const { createTransacaoOpen, setCreateTransacaoOpen } = useModalStore();
   const {
     data: transacoesPaginated,
     isLoading,
@@ -66,7 +68,10 @@ export function Dashboard() {
       </div>
 
       {/* Modal de Nova Transação */}
-      <SimpleTransactionForm />
+      <TransacaoModal
+        open={createTransacaoOpen}
+        onClose={() => setCreateTransacaoOpen(false)}
+      />
     </div>
   );
 }

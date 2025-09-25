@@ -1,10 +1,4 @@
-// Queries de Transações
-export { useTransacao, useTransacoes } from "./use-transacoes";
-export type { TransacoesParams } from "./use-transacoes";
-
-// Mutations de Transações
-export {
-  useCreateTransacao,
-  useDeleteTransacao,
-  useUpdateTransacao,
-} from "./use-transacao-mutations";
+export { useTransacoes } from "./use-transacoes";
+export { useCreateTransacao } from "./use-transacao-mutations";
+export { useUpdateTransacao } from "./use-update-transacao";
+export { useDeleteTransacao } from "./use-delete-transacao";

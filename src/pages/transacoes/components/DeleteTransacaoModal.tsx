@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useDeleteTransacao } from "@/hooks/mutations/transacoes/use-delete-transacao";
+import { useDeleteTransacao } from "@/hooks/queries/transacoes/use-delete-transacao";
 import type { TransacaoResponse } from "@/types";
 import { formatCurrency } from "@/utils";
 import { AlertTriangle, Loader2 } from "lucide-react";
