@@ -7,10 +7,20 @@ interface SummaryData {
   receitas: number;
   despesas: number;
   economias: number;
+  saldoComparacao?: number;
+  receitasComparacao?: number;
+  despesasComparacao?: number;
+  economiasComparacao?: number;
 }
 
 interface SummaryCardsProps {
   data: SummaryData;
+}
+
+function formatPercentage(value?: number): string {
+  if (value === undefined || value === null) return "";
+  const sign = value >= 0 ? "+" : "";
+  return `${sign}${value.toFixed(1)}% desde o mês passado`;
 }
 
 export function SummaryCards({ data }: SummaryCardsProps) {
@@ -27,9 +37,11 @@ export function SummaryCards({ data }: SummaryCardsProps) {
           <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
             {formatCurrency(data.saldo)}
           </div>
-          <p className="text-xs text-gray-600 dark:text-gray-400">
-            +12.5% desde o mês passado
-          </p>
+          {data.saldoComparacao !== undefined && (
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              {formatPercentage(data.saldoComparacao)}
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -44,9 +56,11 @@ export function SummaryCards({ data }: SummaryCardsProps) {
           <div className="text-2xl font-bold text-green-600 dark:text-green-400">
             {formatCurrency(data.receitas)}
           </div>
-          <p className="text-xs text-gray-600 dark:text-gray-400">
-            +8.2% desde o mês passado
-          </p>
+          {data.receitasComparacao !== undefined && (
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              {formatPercentage(data.receitasComparacao)}
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -61,9 +75,11 @@ export function SummaryCards({ data }: SummaryCardsProps) {
           <div className="text-2xl font-bold text-red-600 dark:text-red-400">
             {formatCurrency(data.despesas)}
           </div>
-          <p className="text-xs text-gray-600 dark:text-gray-400">
-            -3.1% desde o mês passado
-          </p>
+          {data.despesasComparacao !== undefined && (
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              {formatPercentage(data.despesasComparacao)}
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -78,9 +94,11 @@ export function SummaryCards({ data }: SummaryCardsProps) {
           <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
             {formatCurrency(data.economias)}
           </div>
-          <p className="text-xs text-gray-600 dark:text-gray-400">
-            +15.3% desde o mês passado
-          </p>
+          {data.economiasComparacao !== undefined && (
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              {formatPercentage(data.economiasComparacao)}
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>
