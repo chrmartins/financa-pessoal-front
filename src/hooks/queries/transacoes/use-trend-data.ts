@@ -1,7 +1,7 @@
 import { calcularResumoFinanceiro } from "@/utils/financeiro";
 import { endOfMonth, format, startOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useTransacoes } from "./use-transacoes";
+import { useTransacoesList } from "./use-transacoes-list";
 
 export interface TrendData {
   mes: string;
@@ -37,7 +37,7 @@ export function useTrendData(): {
 
   // Buscar transações para cada mês (mesma abordagem do dashboard)
   const transacaoQueries = months.map(({ start, end }) =>
-    useTransacoes({
+    useTransacoesList({
       page: 0,
       size: 1000,
       dataInicio: start,

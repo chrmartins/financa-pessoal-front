@@ -16,8 +16,8 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { useCategorias } from "@/hooks/queries/categorias/use-categorias";
-import { useCreateTransacao } from "@/hooks/queries/transacoes/use-transacao-mutations";
+import { useCategoriasList } from "@/hooks/queries/categorias/use-categorias-list";
+import { useTransacaoCreate } from "@/hooks/queries/transacoes/use-transacao-create";
 import type { CreateTransacaoRequest, TransacaoResponse } from "@/types";
 import { formatCurrencyInput, parseCurrencyInput } from "@/utils";
 import { CalendarDays, Clock, Loader2, RefreshCw } from "lucide-react";
@@ -36,10 +36,6 @@ export function TransacaoModal({
   transacao,
 }: TransacaoModalProps) {
   const isEditing = Boolean(transacao);
-  const { mutate: createTransacao, isPending: isCreating } =
-    useCreateTransacao();
-  const { data: categorias = [], isLoading: loadingCategorias } =
-    useCategorias();
 
   // Estados do formulário
   const [descricao, setDescricao] = useState("");
@@ -53,6 +49,34 @@ export function TransacaoModal({
   const [observacoes, setObservacoes] = useState("");
   const [recorrente, setRecorrente] = useState(false);
   const [quantidadeParcelas, setQuantidadeParcelas] = useState<number>(2);
+
+  const { mutate: createTransacao, isPending: isCreating } = useTransacaoCreate(
+    {
+      onSuccess: (data) => {
+        console.log("🎉 Modal: Transação criada com sucesso:", data);
+
+        if (recorrente) {
+          toast.success(
+            `${quantidadeParcelas} transações recorrentes criadas com sucesso!`
+          );
+        } else {
+          toast.success("Transação criada com sucesso!");
+        }
+
+        // Fechar modal após pequeno delay
+        setTimeout(() => {
+          console.log("🔒 Modal: Fechando modal");
+          onClose();
+        }, 500);
+      },
+      onError: (error) => {
+        console.error("❌ Erro ao criar transação:", error);
+        toast.error("Erro ao criar transação");
+      },
+    }
+  );
+  const { data: categorias = [], isLoading: loadingCategorias } =
+    useCategoriasList();
 
   // Resetar formulário quando abrir/fechar modal
   useEffect(() => {
@@ -140,7 +164,7 @@ export function TransacaoModal({
       valor: valorNumerico, // Garantir que seja número
       dataTransacao,
       tipo,
-      categoriaId,
+      categoriaId, // Manter como string (UUID)
       observacoes,
       recorrente,
       quantidadeParcelas: recorrente ? quantidadeParcelas : undefined,
@@ -152,23 +176,7 @@ export function TransacaoModal({
 
     console.log("📦 Dados sendo enviados para API:", requestData);
 
-    createTransacao(requestData, {
-      onSuccess: (data) => {
-        console.log("✅ Transação criada com sucesso:", data);
-        if (recorrente) {
-          toast.success(
-            `${quantidadeParcelas} transações recorrentes criadas com sucesso!`
-          );
-        } else {
-          toast.success("Transação criada com sucesso!");
-        }
-        onClose();
-      },
-      onError: (error) => {
-        console.error("❌ Erro ao criar transação:", error);
-        toast.error("Erro ao criar transação");
-      },
-    });
+    createTransacao(requestData);
   };
 
   // Opções de quantidade de recorrências
@@ -179,6 +187,42 @@ export function TransacaoModal({
     48,
     60, // Opções extras para financiamentos
   ];
+
+  // Função para gerar cor baseada no nome da categoria
+  const getCategoriaColor = (categoria: any) => {
+    if (categoria.cor) {
+      return categoria.cor;
+    }
+
+    // Cores predefinidas baseadas no nome
+    const colors = [
+      "bg-blue-500",
+      "bg-green-500",
+      "bg-purple-500",
+      "bg-pink-500",
+      "bg-yellow-500",
+      "bg-indigo-500",
+      "bg-orange-500",
+      "bg-teal-500",
+      "bg-red-500",
+      "bg-cyan-500",
+      "bg-emerald-500",
+      "bg-violet-500",
+    ];
+
+    // Gerar índice baseado no hash do nome
+    const hash = categoria.nome
+      .split("")
+      .reduce(
+        (acc: number, char: string) => char.charCodeAt(0) + ((acc << 5) - acc),
+        0
+      );
+
+    return colors[Math.abs(hash) % colors.length];
+  };
+
+  // Encontrar categoria selecionada
+  const categoriaSelecionada = categorias.find((c) => c.id === categoriaId);
 
   const getExemploTexto = () => {
     if (!recorrente || !quantidadeParcelas || !valor) return "";
@@ -255,14 +299,39 @@ export function TransacaoModal({
                 onValueChange={(value: "RECEITA" | "DESPESA") => setTipo(value)}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`w-3 h-3 rounded-full ${
+                        tipo === "RECEITA" ? "bg-green-500" : "bg-red-500"
+                      }`}
+                    ></div>
+                    <span
+                      className={`${
+                        tipo === "RECEITA"
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-red-600 dark:text-red-400"
+                      }`}
+                    >
+                      {tipo === "RECEITA" ? "Receita" : "Despesa"}
+                    </span>
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="RECEITA">
-                    <span className="text-green-600">💰 Receita</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                      <span className="text-green-600 dark:text-green-400">
+                        Receita
+                      </span>
+                    </div>
                   </SelectItem>
                   <SelectItem value="DESPESA">
-                    <span className="text-red-600">💸 Despesa</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                      <span className="text-red-600 dark:text-red-400">
+                        Despesa
+                      </span>
+                    </div>
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -290,18 +359,36 @@ export function TransacaoModal({
               disabled={loadingCategorias}
             >
               <SelectTrigger>
-                <SelectValue
-                  placeholder={
-                    loadingCategorias
-                      ? "Carregando categorias..."
-                      : "Selecione uma categoria"
-                  }
-                />
+                {categoriaSelecionada ? (
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`w-3 h-3 rounded-full ${getCategoriaColor(
+                        categoriaSelecionada
+                      )}`}
+                    ></div>
+                    <span>{categoriaSelecionada.nome}</span>
+                  </div>
+                ) : (
+                  <SelectValue
+                    placeholder={
+                      loadingCategorias
+                        ? "Carregando categorias..."
+                        : "Selecione uma categoria"
+                    }
+                  />
+                )}
               </SelectTrigger>
               <SelectContent>
                 {categorias.map((categoria) => (
                   <SelectItem key={categoria.id} value={categoria.id}>
-                    {categoria.nome}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`w-3 h-3 rounded-full ${getCategoriaColor(
+                          categoria
+                        )}`}
+                      ></div>
+                      <span>{categoria.nome}</span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -21,11 +21,12 @@ export interface TransacaoListParams {
 
 /**
  * IDs de usuários para mock temporário
+ * Usando UUIDs reais cadastrados no banco
  */
 export const MOCK_USER_IDS = {
-  DEFAULT: "550e8400-e29b-41d4-a716-446655440001", // UUID válido do banco
-  ALTERNATIVE: "550e8400-e29b-41d4-a716-446655440002", // UUID válido alternativo
-  TERCEIRO: "550e8400-e29b-41d4-a716-446655440003", // UUID válido terceiro
+  DEFAULT: "550e8400-e29b-41d4-a716-446655440001", // UUID real do banco
+  ALTERNATIVE: "550e8400-e29b-41d4-a716-446655440002", // UUID real alternativo
+  TERCEIRO: "550e8400-e29b-41d4-a716-446655440003", // UUID real terceiro
 } as const;
 
 /**
@@ -99,25 +100,35 @@ export const transacaoService = {
       // Implementar paginação no frontend já que o backend não suporta
       const allTransactions = response.data;
 
-      // Ordenar transações em ordem decrescente (mais recente primeiro) como na página de transações
-      const transacoesOrdenadas = [...allTransactions].sort(
-        (a, b) =>
-          new Date(b.dataTransacao).getTime() -
-          new Date(a.dataTransacao).getTime()
-      );
-
       const page = params?.page || 0;
       const size = params?.size || 10;
 
+      // Para buscar "transações recentes" (size pequeno), ordenar ANTES de paginar
+      // para garantir que pegamos as mais recentes, não aleatórias
+      const isRecentTransactions = size <= 10; // Dashboard usa size=5, considerar <=10 como "recentes"
+
+      let processedTransactions = allTransactions;
+      if (isRecentTransactions) {
+        // Ordenar por dataCriacao decrescente ANTES de paginar
+        processedTransactions = [...allTransactions].sort((a, b) => {
+          const dateA = new Date(a.dataCriacao).getTime();
+          const dateB = new Date(b.dataCriacao).getTime();
+          return dateB - dateA; // Decrescente: mais recente criada primeiro
+        });
+      }
+
       const startIndex = page * size;
       const endIndex = startIndex + size;
-      const paginatedContent = transacoesOrdenadas.slice(startIndex, endIndex);
-      const totalPages = Math.ceil(transacoesOrdenadas.length / size);
+      const paginatedContent = processedTransactions.slice(
+        startIndex,
+        endIndex
+      );
+      const totalPages = Math.ceil(allTransactions.length / size);
 
       // Transformar resposta em formato paginado
       const transacaoListResponse: TransacaoListResponse = {
         content: paginatedContent,
-        totalElements: transacoesOrdenadas.length,
+        totalElements: allTransactions.length,
         totalPages: totalPages,
         number: page,
         size: size,
@@ -126,9 +137,9 @@ export const transacaoService = {
       console.log(
         `📋 Encontradas ${transacaoListResponse.content.length} transações de ${
           transacaoListResponse.totalElements
-        } total (página ${
-          page + 1
-        } de ${totalPages}) - Ordenadas por data decrescente`
+        } total (página ${page + 1} de ${totalPages})${
+          isRecentTransactions ? " - PRÉ-ORDENADAS por data decrescente" : ""
+        }`
       );
 
       return transacaoListResponse;
@@ -157,42 +168,27 @@ export const transacaoService = {
     // TODO: Em produção, este ID deve vir da autenticação do usuário logado
     const usuarioId = MOCK_USER_IDS.DEFAULT;
 
-    // Payload único - backend faz toda a lógica de parcelas
-    const transacaoData = {
-      descricao: data.descricao,
-      valor: data.valor,
-      dataTransacao: data.dataTransacao,
-      tipo: data.tipo,
-      categoriaId: data.categoriaId,
-      observacoes: data.observacoes,
-      // Campos de recorrência - backend processa automaticamente
-      ...(data.recorrente && {
-        recorrente: true,
-        quantidadeParcelas: data.quantidadeParcelas,
-      }),
-    };
+    console.log("📤 Dados sendo enviados:", data);
+    console.log("� Usuario ID usado:", usuarioId);
 
-    if (data.recorrente && data.quantidadeParcelas) {
-      console.log(`🔄 Enviando transação recorrente para backend processar:`, {
-        descricao: transacaoData.descricao,
-        parcelas: data.quantidadeParcelas,
-        valor: transacaoData.valor,
-        dataInicial: transacaoData.dataTransacao,
+    try {
+      const response: AxiosResponse<TransacaoResponse> = await api.post(
+        `/transacoes?usuarioId=${usuarioId}`,
+        data
+      );
+
+      console.log("✅ Transação criada com sucesso:", response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error("❌ Erro ao criar transação:", {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        payload: data,
+        usuarioId,
       });
-    } else {
-      console.log("💰 Enviando transação simples:", {
-        descricao: transacaoData.descricao,
-        valor: transacaoData.valor,
-        data: transacaoData.dataTransacao,
-      });
+      throw error;
     }
-
-    const response: AxiosResponse<TransacaoResponse> = await api.post(
-      `/transacoes?usuarioId=${usuarioId}`,
-      transacaoData
-    );
-
-    return response.data;
   },
 
   /**
@@ -243,7 +239,7 @@ export const transacaoService = {
 
     // Backend requer todos os parâmetros obrigatórios
     const params = new URLSearchParams({
-      usuarioId,
+      usuarioId: usuarioId,
       dataInicio: dataInicioFinal,
       dataFim: dataFimFinal,
     });

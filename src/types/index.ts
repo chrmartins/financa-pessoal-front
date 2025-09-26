@@ -47,7 +47,7 @@ export interface CreateTransacaoRequest {
   valor: number;
   dataTransacao: string;
   tipo: "RECEITA" | "DESPESA";
-  categoriaId: string;
+  categoriaId: string; // UUID string como no banco real
   observacoes?: string;
   // Campos para transações recorrentes
   recorrente: boolean;
@@ -61,7 +61,7 @@ export interface UpdateTransacaoRequest {
   valor?: number;
   dataTransacao?: string;
   tipo?: "RECEITA" | "DESPESA";
-  categoriaId?: string;
+  categoriaId?: string; // UUID string como no banco real
   observacoes?: string;
   // Para recorrentes, permitir atualizar apenas a transação atual ou todas
   atualizarTodasRecorrencias?: boolean;
@@ -69,7 +69,7 @@ export interface UpdateTransacaoRequest {
 
 // Tipos para resposta da API
 export interface CategoriaResponse {
-  id: string;
+  id: string; // UUID string como no banco real
   nome: string;
   descricao?: string;
   tipo: "RECEITA" | "DESPESA";
@@ -79,13 +79,13 @@ export interface CategoriaResponse {
 }
 
 export interface TransacaoResponse {
-  id: string; // Mudando para string (UUID)
+  id: string; // UUID string
   descricao: string;
   valor: number;
   dataTransacao: string;
   tipo: "RECEITA" | "DESPESA";
-  categoriaId: number;
-  usuarioId: number;
+  categoriaId: string; // UUID string como no banco real
+  usuarioId: string; // UUID string como no banco real
   categoria: CategoriaResponse;
   observacoes?: string;
   dataCriacao: string;

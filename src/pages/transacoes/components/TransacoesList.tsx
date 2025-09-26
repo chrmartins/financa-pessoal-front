@@ -2,7 +2,7 @@ import { TransacaoModal } from "@/components/TransacaoModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { TransacaoResponse } from "@/types";
-import { formatCurrency } from "@/utils";
+import { formatCurrency, formatDateWithTime } from "@/utils";
 import { Edit2, Trash2, TrendingDown, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { DeleteTransacaoModal } from "./DeleteTransacaoModal";
@@ -104,7 +104,9 @@ export function TransacoesList({
                             {transacao.categoria?.nome || "Sem categoria"}
                           </span>
                           <span>•</span>
-                          <span>{transacao.dataTransacao}</span>
+                          <span>
+                            {formatDateWithTime(transacao.dataCriacao)}
+                          </span>
                         </div>
                         {transacao.observacoes && (
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">

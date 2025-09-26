@@ -1,6 +1,7 @@
 import { Layout } from "@/components/layout/layout";
 import { useUIStore } from "@/stores/ui/use-ui-store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
@@ -26,7 +27,7 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutos
+      // Removido staleTime global para permitir invalidação imediata
     },
   },
 });
@@ -64,6 +65,7 @@ function App() {
           </Suspense>
         </Layout>
       </BrowserRouter>
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 }

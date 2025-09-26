@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import type { TransacaoResponse } from "@/types";
-import { formatCurrency } from "@/utils";
+import { formatCurrency, formatDateWithTime } from "@/utils";
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -93,7 +93,7 @@ export function RecentTransactions({
                     {formatCurrency(Math.abs(transacao.valor))}
                   </p>
                   <p className="text-xs text-gray-600 dark:text-gray-400">
-                    {transacao.dataTransacao}
+                    {formatDateWithTime(transacao.dataCriacao)}
                   </p>
                 </div>
               </div>

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useMonthSelector } from "@/hooks/use-month-selector";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useState } from "react";
-import { useTransacoes } from "../../hooks/queries/transacoes/use-transacoes";
+import { useTransacoesList } from "../../hooks/queries/transacoes/use-transacoes-list";
 import { TransacoesList } from "./components/TransacoesList";
 
 export function Transacoes() {
@@ -21,7 +21,7 @@ export function Transacoes() {
   } = useMonthSelector();
 
   // Buscar transações do mês selecionado
-  const { data, isLoading } = useTransacoes({
+  const { data, isLoading } = useTransacoesList({
     dataInicio,
     dataFim,
     size: 1000, // Buscar todas as transações do mês

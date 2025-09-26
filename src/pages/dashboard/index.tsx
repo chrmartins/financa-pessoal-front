@@ -3,7 +3,7 @@ import { useMonthSelector } from "@/hooks/use-month-selector";
 import { useModalStore } from "@/stores/modals/use-modal-store";
 import { calcularResumoFinanceiro } from "@/utils/financeiro";
 import { useResumoFinanceiro } from "../../hooks/queries/resumo-financeiro/use-resumo-financeiro";
-import { useTransacoes } from "../../hooks/queries/transacoes/use-transacoes";
+import { useTransacoesList } from "../../hooks/queries/transacoes/use-transacoes-list";
 import { DashboardHeader } from "./components/DashboardHeader";
 import { RecentTransactions } from "./components/RecentTransactions";
 import { SummaryCards } from "./components/SummaryCards";
@@ -25,7 +25,7 @@ export function Dashboard() {
 
   // Buscar transações recentes do mês para exibição (5 mais recentes)
   const { data: transacoesRecentes, isLoading: loadingRecentes } =
-    useTransacoes({
+    useTransacoesList({
       page: 0,
       size: 5,
       dataInicio,
@@ -33,7 +33,7 @@ export function Dashboard() {
     });
 
   // Buscar transações do mês para cálculos precisos
-  const { data: transacoesMes, isLoading: loadingMes } = useTransacoes({
+  const { data: transacoesMes, isLoading: loadingMes } = useTransacoesList({
     page: 0,
     size: 1000, // Buscar todas as transações do mês
     dataInicio,

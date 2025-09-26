@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useDeleteTransacao } from "@/hooks/queries/transacoes/use-delete-transacao";
+import { useTransacaoDelete } from "@/hooks/queries/transacoes/use-transacao-delete";
 import type { TransacaoResponse } from "@/types";
 import { formatCurrency } from "@/utils";
 import { AlertTriangle, Loader2 } from "lucide-react";
@@ -23,7 +23,7 @@ export function DeleteTransacaoModal({
   open,
   onClose,
 }: DeleteTransacaoModalProps) {
-  const deleteTransacao = useDeleteTransacao();
+  const deleteTransacao = useTransacaoDelete();
 
   const handleDelete = async () => {
     if (!transacao) return;
