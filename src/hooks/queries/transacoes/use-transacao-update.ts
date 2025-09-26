@@ -12,7 +12,6 @@ export function useTransacaoUpdate() {
     mutationFn: ({ id, data }: { id: string; data: UpdateTransacaoRequest }) =>
       transacaoService.update(id, data),
     onSuccess: (_, variables) => {
-      console.log("🔄 Atualização: Invalidando queries...");
 
       // Invalida todas as queries de transações-list
       queryClient.invalidateQueries({
@@ -34,8 +33,6 @@ export function useTransacaoUpdate() {
           return Array.isArray(queryKey) && queryKey[0] === "resumo-financeiro";
         },
       });
-
-      console.log("✅ Atualização: Queries invalidadas");
     },
   });
 }

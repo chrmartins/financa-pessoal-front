@@ -10,7 +10,6 @@ export function useTransacaoDelete() {
   return useMutation({
     mutationFn: (id: string) => transacaoService.delete(id),
     onSuccess: () => {
-      console.log("🔄 Exclusão: Invalidando queries...");
 
       // Invalida todas as queries de transações-list
       queryClient.invalidateQueries({
@@ -27,8 +26,6 @@ export function useTransacaoDelete() {
           return Array.isArray(queryKey) && queryKey[0] === "resumo-financeiro";
         },
       });
-
-      console.log("✅ Exclusão: Queries invalidadas");
     },
   });
 }

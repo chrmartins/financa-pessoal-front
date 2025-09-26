@@ -18,10 +18,8 @@ export const categoriaService = {
       const response: AxiosResponse<CategoriaResponse[]> = await api.get(
         "/categorias"
       );
-      console.log("📂 Categorias carregadas:", response.data);
       return response.data;
     } catch (error) {
-      console.error("❌ Erro ao carregar categorias:", error);
       throw error;
     }
   },
@@ -34,10 +32,8 @@ export const categoriaService = {
       const response: AxiosResponse<CategoriaResponse> = await api.get(
         `/categorias/${id}`
       );
-      console.log(`📂 Categoria ${id} carregada:`, response.data);
       return response.data;
     } catch (error) {
-      console.error(`❌ Erro ao carregar categoria ${id}:`, error);
       throw error;
     }
   },
@@ -51,10 +47,8 @@ export const categoriaService = {
         "/categorias",
         data
       );
-      console.log("✅ Categoria criada:", response.data);
       return response.data;
     } catch (error) {
-      console.error("❌ Erro ao criar categoria:", error);
       throw error;
     }
   },
@@ -87,10 +81,8 @@ export const categoriaService = {
 export const testCategorias = async (): Promise<boolean> => {
   try {
     await categoriaService.list();
-    console.log("🟢 Categorias endpoint working");
     return true;
   } catch (error) {
-    console.warn("🔴 Categorias endpoint failed:", error);
     return false;
   }
 };

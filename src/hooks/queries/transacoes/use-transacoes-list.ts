@@ -18,21 +18,17 @@ export interface TransacoesParams {
  */
 export function useTransacoesList(params?: TransacoesParams) {
   const queryKey = ["transacoes-list", params];
-  console.log("🔍 useTransacoesList - Query Key:", queryKey);
-  console.log("🔍 useTransacoesList - Params:", params);
 
   const result = useQuery({
     queryKey,
     queryFn: () => {
-      console.log("📡 EXECUTANDO FETCH - transacoes com params:", params);
       return transacaoService.list(params);
     },
     select: (data) => {
-      // Ordenar transações por dataCriacao em ordem decrescente (mais recente primeiro)
       const transacoesOrdenadas = [...data.content].sort((a, b) => {
         const dateA = new Date(a.dataCriacao).getTime();
         const dateB = new Date(b.dataCriacao).getTime();
-        return dateB - dateA; // Decrescente: mais recente criada primeiro
+        return dateB - dateA;
       });
 
       return {
@@ -42,15 +38,10 @@ export function useTransacoesList(params?: TransacoesParams) {
     },
   });
 
-  // Log do resultado
   if (result.data) {
-    console.log(
-      "✅ FETCH SUCCESS - transacoes recebidas:",
       result.data.content.length
-    );
   }
   if (result.error) {
-    console.log("❌ FETCH ERROR:", result.error);
   }
 
   return result;

@@ -40,24 +40,12 @@ export function Dashboard() {
     dataFim,
   });
 
-  // Debug: Log das datas sendo usadas na consulta
-  console.log("📅 Datas da consulta:", {
-    dataInicio,
-    dataFim,
-    formattedMonth,
-  });
-
   // Buscar resumo financeiro do mês selecionado - TESTANDO ENDPOINT CORRIGIDO
   const {
     data: resumoFinanceiro,
     isLoading: loadingResumo,
     error,
   } = useResumoFinanceiro({ dataInicio, dataFim, enabled: true });
-
-  // Para debug, se der erro novamente, descomente abaixo:
-  // const resumoFinanceiro = null;
-  // const loadingResumo = false;
-  // const error = null;
 
   const isLoading = loadingRecentes || loadingResumo || loadingMes;
 
@@ -71,19 +59,6 @@ export function Dashboard() {
 
   const transacoesRecentesList = transacoesRecentes?.content || [];
   const todasTransacoesMes = transacoesMes?.content || [];
-
-  // Log detalhado das transações para debug
-  console.log("🔍 Transações brutas do mês:", {
-    periodo: `${dataInicio} a ${dataFim}`,
-    totalTransacoesFiltradas: todasTransacoesMes.length,
-    primeiraTransacao: todasTransacoesMes[0],
-    segundaTransacao: todasTransacoesMes[1],
-    tiposUnicos: [...new Set(todasTransacoesMes.map((t) => t.tipo))],
-    valoresUnicos: todasTransacoesMes
-      .map((t) => ({ valor: t.valor, tipo: typeof t.valor }))
-      .slice(0, 5),
-    todasAsDatas: todasTransacoesMes.map((t) => t.dataTransacao).slice(0, 10),
-  });
 
   // Se houver transações, calcular o resumo localmente
   const resumoData =
@@ -107,23 +82,8 @@ export function Dashboard() {
     totalTransacoes: 0,
   };
 
-  // Log para depuração
-  console.log("📊 Dashboard - Dados do mês:", {
-    periodo: `${dataInicio} a ${dataFim}`,
-    totalTransacoes: todasTransacoesMes.length,
-    resumoBackend: resumoFinanceiro,
-    resumoCalculado: resumoData,
-    resumoFinal: resumoFinal,
-    loadingStatus: {
-      loadingRecentes,
-      loadingMes,
-      loadingResumo,
-    },
-  });
-
   return (
     <div className="space-y-6">
-      {/* Header */}
       <DashboardHeader
         formattedMonth={formattedMonth}
         onPreviousMonth={goToPreviousMonth}
@@ -133,22 +93,17 @@ export function Dashboard() {
         isLoadingMonth={loadingMes || loadingResumo}
       />
 
-      {/* Cards de Resumo */}
       <SummaryCards data={resumoFinal} isLoading={isLoading} />
 
-      {/* Gráfico de Tendência e Transações Recentes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Gráfico Placeholder */}
         <TrendChart />
 
-        {/* Transações Recentes */}
         <RecentTransactions
           transacoes={transacoesRecentesList}
           isLoading={loadingRecentes}
         />
       </div>
 
-      {/* Modal de Nova Transação */}
       <TransacaoModal
         open={createTransacaoOpen}
         onClose={() => setCreateTransacaoOpen(false)}

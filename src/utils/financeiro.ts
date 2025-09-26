@@ -23,10 +23,6 @@ export interface ResumoFinanceiro {
 export function calcularResumoFinanceiro(
   transacoes: TransacaoCalculo[]
 ): ResumoFinanceiro {
-  console.log("🧮 Calculando resumo financeiro:", {
-    totalTransacoes: transacoes.length,
-    transacoes: transacoes.slice(0, 3), // Mostrar apenas as 3 primeiras para debug
-  });
 
   const receitas = transacoes
     .filter((t) => t.tipo === "RECEITA")
@@ -54,8 +50,6 @@ export function calcularResumoFinanceiro(
     economias: isNaN(economias) ? 0 : economias,
     totalTransacoes: transacoes.length,
   };
-
-  console.log("📊 Resultado do cálculo:", resultado);
 
   return resultado;
 }

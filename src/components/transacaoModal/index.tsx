@@ -71,7 +71,6 @@ export function TransacaoModal({
     error,
   } = useTransacaoCreate();
 
-  // Lidar com sucesso da criação/atualização
   useEffect(() => {
     if (isSuccess) {
       toast.success(
@@ -83,7 +82,6 @@ export function TransacaoModal({
     }
   }, [isSuccess, isEditing, onClose]);
 
-  // Lidar com erro da criação/atualização
   useEffect(() => {
     if (isError && error) {
       toast.error(
@@ -149,10 +147,8 @@ export function TransacaoModal({
   };
 
   const handleSubmit = onSubmit((data: FormData) => {
-    // Converter valor formatado para número
     const valorNumerico = parseCurrencyInput(data.valorFormatado);
 
-    // Validar dados básicos
     if (!data.categoriaId) {
       toast.error("Por favor, selecione uma categoria");
       return;
@@ -181,8 +177,8 @@ export function TransacaoModal({
     createTransacao(requestData);
   });
 
-  // Encontrar categoria selecionada
   const categoriaId = watch("categoriaId");
+  
   const categoriaSelecionada = categorias.find((c) => c.id === categoriaId);
 
   return (

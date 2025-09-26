@@ -17,7 +17,6 @@ export const api = axios.create({
 export const testConnection = async (): Promise<boolean> => {
   try {
     const response = await api.get("/test", { timeout: 5000 });
-    console.log("🟢 API connection test successful:", response.status);
     return true;
   } catch (error) {
     console.warn("🔴 API connection test failed:", error);

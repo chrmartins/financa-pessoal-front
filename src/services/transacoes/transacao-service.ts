@@ -74,7 +74,6 @@ export const transacaoService = {
       }
       if (dataFim !== undefined && dataFim !== null && dataFim !== "") {
         const dataFimFormatted = new Date(dataFim).toISOString().split("T")[0];
-        console.log(`📅 Data fim formatada: ${dataFim} -> ${dataFimFormatted}`);
         searchParams.append("dataFim", dataFimFormatted);
       }
     }
@@ -84,19 +83,15 @@ export const transacaoService = {
         `/transacoes/usuario/${usuarioId}?${searchParams.toString()}`
       );
 
-      // Implementar paginação no frontend já que o backend não suporta
       const allTransactions = response.data;
 
       const page = params?.page || 0;
       const size = params?.size || 10;
 
-      // Para buscar "transações recentes" (size pequeno), ordenar ANTES de paginar
-      // para garantir que pegamos as mais recentes, não aleatórias
-      const isRecentTransactions = size <= 10; // Dashboard usa size=5, considerar <=10 como "recentes"
+      const isRecentTransactions = size <= 10;
 
       let processedTransactions = allTransactions;
       if (isRecentTransactions) {
-        // Ordenar por dataCriacao decrescente ANTES de paginar
         processedTransactions = [...allTransactions].sort((a, b) => {
           const dateA = new Date(a.dataCriacao).getTime();
           const dateB = new Date(b.dataCriacao).getTime();
