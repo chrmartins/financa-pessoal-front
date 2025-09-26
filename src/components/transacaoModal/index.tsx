@@ -18,17 +18,17 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useCategoriasList } from "@/hooks/queries/categorias/use-categorias-list";
 import { useTransacaoCreate } from "@/hooks/queries/transacoes/use-transacao-create";
-import type { CreateTransacaoRequest, TransacaoResponse } from "@/types";
+import type { CreateTransacaoRequest } from "@/types";
 import { formatCurrencyInput, parseCurrencyInput } from "@/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDays, Clock, Loader2, RefreshCw } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-interface TransacaoModalProps {
-  open: boolean;
-  onClose: () => void;
-  transacao?: TransacaoResponse | null;
-}
+import type { TransacaoModalProps } from "./interface";
+import { getCategoriaColor, getExemploTexto, opcoesQuantidade } from "./utils";
+import { formSchema, type FormData } from "./validations";
 
 export function TransacaoModal({
   open,
@@ -37,207 +37,144 @@ export function TransacaoModal({
 }: TransacaoModalProps) {
   const isEditing = Boolean(transacao);
 
-  // Estados do formulário
-  const [descricao, setDescricao] = useState("");
-  const [valor, setValor] = useState<number>(0);
-  const [valorFormatado, setValorFormatado] = useState(""); // Novo estado para exibição
-  const [dataTransacao, setDataTransacao] = useState(
-    new Date().toISOString().split("T")[0]
-  );
-  const [tipo, setTipo] = useState<"RECEITA" | "DESPESA">("DESPESA");
-  const [categoriaId, setCategoriaId] = useState("");
-  const [observacoes, setObservacoes] = useState("");
-  const [recorrente, setRecorrente] = useState(false);
-  const [quantidadeParcelas, setQuantidadeParcelas] = useState<number>(2);
+  const {
+    register,
+    handleSubmit: onSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      descricao: "",
+      valorFormatado: "",
+      dataTransacao: new Date().toISOString().split("T")[0],
+      tipo: "DESPESA",
+      categoriaId: "",
+      observacoes: "",
+      recorrente: false,
+      quantidadeParcelas: 2,
+    },
+  });
+
+  const recorrente = watch("recorrente");
+  const quantidadeParcelas = watch("quantidadeParcelas");
+  const valorFormatado = watch("valorFormatado");
+  const tipo = watch("tipo");
 
   const { mutate: createTransacao, isPending: isCreating } = useTransacaoCreate(
     {
-      onSuccess: (data) => {
-        console.log("🎉 Modal: Transação criada com sucesso:", data);
-
-        if (recorrente) {
-          toast.success(
-            `${quantidadeParcelas} transações recorrentes criadas com sucesso!`
-          );
-        } else {
-          toast.success("Transação criada com sucesso!");
-        }
-
-        // Fechar modal após pequeno delay
-        setTimeout(() => {
-          console.log("🔒 Modal: Fechando modal");
-          onClose();
-        }, 500);
+      onSuccess: () => {
+        toast.success(
+          isEditing
+            ? "Transação atualizada com sucesso!"
+            : "Transação criada com sucesso!"
+        );
+        onClose();
       },
       onError: (error) => {
-        console.error("❌ Erro ao criar transação:", error);
-        toast.error("Erro ao criar transação");
+        toast.error(
+          error?.message || "Erro ao processar transação. Tente novamente."
+        );
       },
     }
   );
+
   const { data: categorias = [], isLoading: loadingCategorias } =
     useCategoriasList();
+
+  // Filtrar categorias baseado no tipo selecionado
+  const categoriasFiltradas = categorias.filter(
+    (categoria) => categoria.tipo === tipo
+  );
+
+  // Limpar categoria selecionada quando o tipo mudar (para evitar incompatibilidade)
+  useEffect(() => {
+    const categoriaAtual = watch("categoriaId");
+    if (categoriaAtual && categorias.length > 0) {
+      const categoriaEncontrada = categorias.find(
+        (c) => c.id === categoriaAtual
+      );
+      if (categoriaEncontrada && categoriaEncontrada.tipo !== tipo) {
+        setValue("categoriaId", "");
+      }
+    }
+  }, [tipo, categorias, setValue, watch]);
 
   // Resetar formulário quando abrir/fechar modal
   useEffect(() => {
     if (open) {
       if (transacao) {
-        setDescricao(transacao.descricao);
-        setValor(transacao.valor);
-        // Converter número de volta para string formatada
         const valorEmCents = Math.round(transacao.valor * 100).toString();
-        setValorFormatado(formatCurrencyInput(valorEmCents));
-        setDataTransacao(transacao.dataTransacao);
-        setTipo(transacao.tipo);
-        setCategoriaId(transacao.categoria.id);
-        setObservacoes(transacao.observacoes || "");
-        setRecorrente(transacao.recorrente || false);
-        setQuantidadeParcelas(transacao.quantidadeParcelas || 2);
+        reset({
+          descricao: transacao.descricao,
+          valorFormatado: formatCurrencyInput(valorEmCents),
+          dataTransacao: transacao.dataTransacao,
+          tipo: transacao.tipo,
+          categoriaId: transacao.categoria.id,
+          observacoes: transacao.observacoes || "",
+          recorrente: transacao.recorrente || false,
+          quantidadeParcelas: transacao.quantidadeParcelas || 2,
+        });
       } else {
-        // Limpar formulário para nova transação
-        setDescricao("");
-        setValor(0);
-        setValorFormatado("");
-        setDataTransacao(new Date().toISOString().split("T")[0]);
-        setTipo("DESPESA");
-        setCategoriaId("");
-        setObservacoes("");
-        setRecorrente(false);
-        setQuantidadeParcelas(2);
+        reset({
+          descricao: "",
+          valorFormatado: "",
+          dataTransacao: new Date().toISOString().split("T")[0],
+          tipo: "DESPESA",
+          categoriaId: "",
+          observacoes: "",
+          recorrente: false,
+          quantidadeParcelas: 2,
+        });
       }
     }
-  }, [open, transacao]);
+  }, [open, transacao, reset]);
 
   // Função para formatar valor conforme usuário digita
   const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
     const formatted = formatCurrencyInput(inputValue);
-    setValorFormatado(formatted);
-
-    // Converter para número para armazenar no estado
-    const numericValue = parseCurrencyInput(formatted);
-    console.log(
-      `💰 Valor formatado: "${formatted}" → Numérico: ${numericValue}`
-    );
-    setValor(numericValue);
+    setValue("valorFormatado", formatted);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = onSubmit((data: FormData) => {
+    // Converter valor formatado para número
+    const valorNumerico = parseCurrencyInput(data.valorFormatado);
 
-    console.log("🚀 Iniciando criação de transação:", {
-      descricao,
-      valor,
-      recorrente,
-      quantidadeParcelas: recorrente ? quantidadeParcelas : "N/A",
-    });
-
-    // Validações básicas
-    if (!descricao.trim()) {
-      toast.error("Descrição é obrigatória");
+    // Validar dados básicos
+    if (!data.categoriaId) {
+      toast.error("Por favor, selecione uma categoria");
       return;
     }
 
-    // Validação aprimorada do valor
-    const valorNumerico = Number(valor);
-    if (!valorNumerico || valorNumerico <= 0 || isNaN(valorNumerico)) {
-      toast.error("Valor deve ser um número maior que zero");
-      console.log("❌ Valor inválido:", {
-        valor,
-        valorNumerico,
-        isNaN: isNaN(valorNumerico),
-      });
-      return;
-    }
-
-    if (!categoriaId) {
-      toast.error("Selecione uma categoria");
-      return;
-    }
-    if (recorrente && quantidadeParcelas < 2) {
-      toast.error("Para transações recorrentes, defina pelo menos 2 parcelas");
+    if (valorNumerico <= 0) {
+      toast.error("Valor deve ser maior que zero");
       return;
     }
 
     const requestData: CreateTransacaoRequest = {
-      descricao,
-      valor: valorNumerico, // Garantir que seja número
-      dataTransacao,
-      tipo,
-      categoriaId, // Manter como string (UUID)
-      observacoes,
-      recorrente,
-      quantidadeParcelas: recorrente ? quantidadeParcelas : undefined,
-      tipoRecorrencia: recorrente ? "MENSAL" : undefined,
-      valorTotalOriginal: recorrente
-        ? valorNumerico * quantidadeParcelas
+      descricao: data.descricao.trim(),
+      valor: valorNumerico,
+      dataTransacao: data.dataTransacao,
+      tipo: data.tipo,
+      categoriaId: data.categoriaId,
+      observacoes: data.observacoes?.trim() || "",
+      recorrente: data.recorrente,
+      quantidadeParcelas: data.recorrente ? data.quantidadeParcelas : undefined,
+      tipoRecorrencia: data.recorrente ? "MENSAL" : undefined,
+      valorTotalOriginal: data.recorrente
+        ? valorNumerico * data.quantidadeParcelas
         : undefined,
     };
 
-    console.log("📦 Dados sendo enviados para API:", requestData);
-
     createTransacao(requestData);
-  };
-
-  // Opções de quantidade de recorrências
-  const opcoesQuantidade = [
-    ...Array.from({ length: 23 }, (_, i) => i + 2), // 2 a 24
-    30,
-    36,
-    48,
-    60, // Opções extras para financiamentos
-  ];
-
-  // Função para gerar cor baseada no nome da categoria
-  const getCategoriaColor = (categoria: any) => {
-    if (categoria.cor) {
-      return categoria.cor;
-    }
-
-    // Cores predefinidas baseadas no nome
-    const colors = [
-      "bg-blue-500",
-      "bg-green-500",
-      "bg-purple-500",
-      "bg-pink-500",
-      "bg-yellow-500",
-      "bg-indigo-500",
-      "bg-orange-500",
-      "bg-teal-500",
-      "bg-red-500",
-      "bg-cyan-500",
-      "bg-emerald-500",
-      "bg-violet-500",
-    ];
-
-    // Gerar índice baseado no hash do nome
-    const hash = categoria.nome
-      .split("")
-      .reduce(
-        (acc: number, char: string) => char.charCodeAt(0) + ((acc << 5) - acc),
-        0
-      );
-
-    return colors[Math.abs(hash) % colors.length];
-  };
+  });
 
   // Encontrar categoria selecionada
+  const categoriaId = watch("categoriaId");
   const categoriaSelecionada = categorias.find((c) => c.id === categoriaId);
-
-  const getExemploTexto = () => {
-    if (!recorrente || !quantidadeParcelas || !valor) return "";
-
-    const totalValue = valor * quantidadeParcelas;
-    const tipoTexto = tipo === "RECEITA" ? "receita" : "despesa";
-
-    return `${quantidadeParcelas}x ${tipoTexto}s mensais de ${valor.toLocaleString(
-      "pt-BR",
-      { style: "currency", currency: "BRL" }
-    )} = ${totalValue.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    })} total`;
-  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -265,9 +202,13 @@ export function TransacaoModal({
             <Input
               id="descricao"
               placeholder="Ex: iPhone, Netflix, Salário..."
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
+              {...register("descricao")}
             />
+            {errors.descricao && (
+              <p className="text-sm text-red-500 mt-1">
+                {errors.descricao.message}
+              </p>
+            )}
           </div>
 
           {/* Valor */}
@@ -288,6 +229,11 @@ export function TransacaoModal({
                 onChange={handleValorChange}
               />
             </div>
+            {errors.valorFormatado && (
+              <p className="text-sm text-red-500 mt-1">
+                {errors.valorFormatado.message}
+              </p>
+            )}
           </div>
 
           {/* Tipo e Data */}
@@ -296,7 +242,9 @@ export function TransacaoModal({
               <Label>Tipo</Label>
               <Select
                 value={tipo}
-                onValueChange={(value: "RECEITA" | "DESPESA") => setTipo(value)}
+                onValueChange={(value: "RECEITA" | "DESPESA") =>
+                  setValue("tipo", value)
+                }
               >
                 <SelectTrigger>
                   <div className="flex items-center gap-2">
@@ -344,9 +292,13 @@ export function TransacaoModal({
               <Input
                 id="dataTransacao"
                 type="date"
-                value={dataTransacao}
-                onChange={(e) => setDataTransacao(e.target.value)}
+                {...register("dataTransacao")}
               />
+              {errors.dataTransacao && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors.dataTransacao.message}
+                </p>
+              )}
             </div>
           </div>
 
@@ -355,7 +307,7 @@ export function TransacaoModal({
             <Label>Categoria</Label>
             <Select
               value={categoriaId}
-              onValueChange={setCategoriaId}
+              onValueChange={(value) => setValue("categoriaId", value)}
               disabled={loadingCategorias}
             >
               <SelectTrigger>
@@ -379,7 +331,7 @@ export function TransacaoModal({
                 )}
               </SelectTrigger>
               <SelectContent>
-                {categorias.map((categoria) => (
+                {categoriasFiltradas.map((categoria) => (
                   <SelectItem key={categoria.id} value={categoria.id}>
                     <div className="flex items-center gap-2">
                       <div
@@ -393,6 +345,11 @@ export function TransacaoModal({
                 ))}
               </SelectContent>
             </Select>
+            {errors.categoriaId && (
+              <p className="text-sm text-red-500 mt-1">
+                {errors.categoriaId.message}
+              </p>
+            )}
           </div>
 
           {/* Recorrência Simplificada */}
@@ -402,7 +359,10 @@ export function TransacaoModal({
                 <RefreshCw className="h-4 w-4 text-blue-500" />
                 <Label className="font-medium">É recorrente? (mensal)</Label>
               </div>
-              <Switch checked={recorrente} onCheckedChange={setRecorrente} />
+              <Switch
+                checked={recorrente}
+                onCheckedChange={(checked) => setValue("recorrente", checked)}
+              />
             </div>
 
             {recorrente && (
@@ -412,7 +372,7 @@ export function TransacaoModal({
                   <Select
                     value={quantidadeParcelas.toString()}
                     onValueChange={(value) =>
-                      setQuantidadeParcelas(Number(value))
+                      setValue("quantidadeParcelas", Number(value))
                     }
                   >
                     <SelectTrigger>
@@ -436,14 +396,24 @@ export function TransacaoModal({
                       ))}
                     </SelectContent>
                   </Select>
+                  {errors.quantidadeParcelas && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {errors.quantidadeParcelas.message}
+                    </p>
+                  )}
                 </div>
 
                 {/* Preview da recorrência */}
-                {quantidadeParcelas && valor && (
+                {quantidadeParcelas && parseCurrencyInput(valorFormatado) && (
                   <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-md">
                     <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
                       <RefreshCw className="inline h-4 w-4 mr-1" />
-                      {getExemploTexto()}
+                      {getExemploTexto(
+                        recorrente,
+                        quantidadeParcelas,
+                        valorFormatado,
+                        tipo
+                      )}
                     </p>
                     <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                       Criará {quantidadeParcelas} transações mensais automáticas
@@ -461,8 +431,7 @@ export function TransacaoModal({
               id="observacoes"
               placeholder="Informações adicionais..."
               rows={2}
-              value={observacoes}
-              onChange={(e) => setObservacoes(e.target.value)}
+              {...register("observacoes")}
             />
           </div>
 

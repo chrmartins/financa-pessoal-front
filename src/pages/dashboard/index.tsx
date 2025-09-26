@@ -1,4 +1,4 @@
-import { TransacaoModal } from "@/components/TransacaoModal";
+import { TransacaoModal } from "@/components/transacaoModal";
 import { useMonthSelector } from "@/hooks/use-month-selector";
 import { useModalStore } from "@/stores/modals/use-modal-store";
 import { calcularResumoFinanceiro } from "@/utils/financeiro";

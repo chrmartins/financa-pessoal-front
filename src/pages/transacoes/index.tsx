@@ -1,4 +1,4 @@
-import { TransacaoModal } from "@/components/TransacaoModal";
+import { TransacaoModal } from "@/components/transacaoModal";
 import { Button } from "@/components/ui/button";
 import { useMonthSelector } from "@/hooks/use-month-selector";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";

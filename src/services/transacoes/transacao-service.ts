@@ -70,9 +70,6 @@ export const transacaoService = {
         const dataInicioFormatted = new Date(dataInicio)
           .toISOString()
           .split("T")[0];
-        console.log(
-          `📅 Data início formatada: ${dataInicio} -> ${dataInicioFormatted}`
-        );
         searchParams.append("dataInicio", dataInicioFormatted);
       }
       if (dataFim !== undefined && dataFim !== null && dataFim !== "") {
@@ -81,16 +78,6 @@ export const transacaoService = {
         searchParams.append("dataFim", dataFimFormatted);
       }
     }
-
-    console.log(
-      "🔍 Buscando transações com parâmetros:",
-      Object.fromEntries(searchParams)
-    );
-
-    console.log(`🆔 Usando usuarioId: ${usuarioId}`);
-    console.log(
-      `🔗 URL completa: /transacoes/usuario/${usuarioId}?${searchParams.toString()}`
-    );
 
     try {
       const response: AxiosResponse<TransacaoResponse[]> = await api.get(
@@ -134,14 +121,6 @@ export const transacaoService = {
         size: size,
       };
 
-      console.log(
-        `📋 Encontradas ${transacaoListResponse.content.length} transações de ${
-          transacaoListResponse.totalElements
-        } total (página ${page + 1} de ${totalPages})${
-          isRecentTransactions ? " - PRÉ-ORDENADAS por data decrescente" : ""
-        }`
-      );
-
       return transacaoListResponse;
     } catch (error) {
       console.error("❌ Erro ao buscar transações:", error);
@@ -168,25 +147,19 @@ export const transacaoService = {
     // TODO: Em produção, este ID deve vir da autenticação do usuário logado
     const usuarioId = MOCK_USER_IDS.DEFAULT;
 
-    console.log("📤 Dados sendo enviados:", data);
-    console.log("� Usuario ID usado:", usuarioId);
-
     try {
       const response: AxiosResponse<TransacaoResponse> = await api.post(
         `/transacoes?usuarioId=${usuarioId}`,
         data
       );
 
-      console.log("✅ Transação criada com sucesso:", response.data);
       return response.data;
     } catch (error: any) {
-      console.error("❌ Erro ao criar transação:", {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        payload: data,
-        usuarioId,
-      });
+      console.error(
+        "❌ SERVICE - Erro:",
+        error.response?.status,
+        error.response?.data
+      );
       throw error;
     }
   },
@@ -231,12 +204,6 @@ export const transacaoService = {
     const dataInicioFinal = dataInicio || inicioMes;
     const dataFimFinal = dataFim || fimMes;
 
-    console.log(`📊 Buscando resumo financeiro:`, {
-      usuarioId,
-      dataInicio: dataInicioFinal,
-      dataFim: dataFimFinal,
-    });
-
     // Backend requer todos os parâmetros obrigatórios
     const params = new URLSearchParams({
       usuarioId: usuarioId,
@@ -248,7 +215,6 @@ export const transacaoService = {
       `/transacoes/resumo?${params.toString()}`
     );
 
-    console.log("✅ Resumo obtido do backend:", response.data);
     return response.data;
   },
 
