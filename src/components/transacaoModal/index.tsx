@@ -63,33 +63,42 @@ export function TransacaoModal({
   const valorFormatado = watch("valorFormatado");
   const tipo = watch("tipo");
 
-  const { mutate: createTransacao, isPending: isCreating } = useTransacaoCreate(
-    {
-      onSuccess: () => {
-        toast.success(
-          isEditing
-            ? "Transação atualizada com sucesso!"
-            : "Transação criada com sucesso!"
-        );
-        onClose();
-      },
-      onError: (error) => {
-        toast.error(
-          error?.message || "Erro ao processar transação. Tente novamente."
-        );
-      },
+  const {
+    mutate: createTransacao,
+    isPending: isCreating,
+    isSuccess,
+    isError,
+    error,
+  } = useTransacaoCreate();
+
+  // Lidar com sucesso da criação/atualização
+  useEffect(() => {
+    if (isSuccess) {
+      toast.success(
+        isEditing
+          ? "Transação atualizada com sucesso!"
+          : "Transação criada com sucesso!"
+      );
+      onClose();
     }
-  );
+  }, [isSuccess, isEditing, onClose]);
+
+  // Lidar com erro da criação/atualização
+  useEffect(() => {
+    if (isError && error) {
+      toast.error(
+        error?.message || "Erro ao processar transação. Tente novamente."
+      );
+    }
+  }, [isError, error]);
 
   const { data: categorias = [], isLoading: loadingCategorias } =
     useCategoriasList();
 
-  // Filtrar categorias baseado no tipo selecionado
   const categoriasFiltradas = categorias.filter(
     (categoria) => categoria.tipo === tipo
   );
 
-  // Limpar categoria selecionada quando o tipo mudar (para evitar incompatibilidade)
   useEffect(() => {
     const categoriaAtual = watch("categoriaId");
     if (categoriaAtual && categorias.length > 0) {
