@@ -6,15 +6,16 @@ import { cn } from "@/utils";
 import {
   CreditCard,
   Home,
+  LogOut,
   Menu,
   Settings,
   Tags,
   TrendingUp,
   X,
 } from "lucide-react";
-import { type ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Toaster } from "sonner";
+import { type ReactNode, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { toast, Toaster } from "sonner";
 import { Logo } from "./logo.tsx";
 
 interface LayoutProps {
@@ -79,7 +80,9 @@ function getPageInfo(pathname: string) {
 
 // Componente para exibir perfil do usuário
 function UserProfile() {
-  const { user } = useUserStore();
+  const { user, logout } = useUserStore();
+  const navigate = useNavigate();
+  const [showMenu, setShowMenu] = useState(false);
 
   const getInitials = (name: string) => {
     const names = name.split(" ");
@@ -89,21 +92,86 @@ function UserProfile() {
     return name.slice(0, 2).toUpperCase();
   };
 
+  const handleLogout = async () => {
+    try {
+      setShowMenu(false);
+      toast.success("Logout realizado com sucesso!");
+      await logout();
+      navigate("/login");
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+      toast.error("Erro ao fazer logout. Tente novamente.");
+    }
+  };
+
   return (
-    <div className="flex items-center gap-3">
-      <div className="h-10 w-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-md">
-        <span className="text-sm font-semibold text-white">
-          {user?.nome ? getInitials(user.nome) : "U"}
-        </span>
-      </div>
-      <div className="hidden sm:flex flex-col items-start">
-        <span className="text-sm font-medium text-gray-900 dark:text-gray-100 leading-none">
-          {user?.nome || "Usuário"}
-        </span>
-        <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          {user?.email || "email@example.com"}
-        </span>
-      </div>
+    <div className="relative flex items-center gap-3">
+      <button
+        onClick={() => setShowMenu(!showMenu)}
+        className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+      >
+        <div className="h-10 w-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-md">
+          <span className="text-sm font-semibold text-white">
+            {user?.nome ? getInitials(user.nome) : "U"}
+          </span>
+        </div>
+        <div className="hidden sm:flex flex-col items-start">
+          <span className="text-sm font-medium text-gray-900 dark:text-gray-100 leading-none">
+            {user?.nome || "Usuário"}
+          </span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            {user?.email || "email@example.com"}
+          </span>
+        </div>
+      </button>
+
+      {/* Dropdown Menu */}
+      {showMenu && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setShowMenu(false)}
+          />
+          <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+            {/* User Info Header */}
+            <div className="p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                {user?.nome || "Usuário"}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                {user?.email || "email@example.com"}
+              </p>
+              {user?.papel && (
+                <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                  {user.papel}
+                </span>
+              )}
+            </div>
+
+            {/* Menu Options */}
+            <div className="p-2">
+              <Link
+                to="/configuracoes"
+                onClick={() => setShowMenu(false)}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+              >
+                <Settings className="h-4 w-4" />
+                Configurações
+              </Link>
+
+              <div className="my-1 border-t border-gray-200 dark:border-gray-700" />
+
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                Sair
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

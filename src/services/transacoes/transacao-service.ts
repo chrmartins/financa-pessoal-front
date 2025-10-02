@@ -75,6 +75,8 @@ export const transacaoService = {
       // Backend aceita apenas dataInicio e dataFim, ignorar page/size
       const { dataInicio, dataFim } = params;
 
+      console.log("📅 Filtros de data recebidos:", { dataInicio, dataFim });
+
       // Garantir formato ISO (YYYY-MM-DD) para as datas
       if (
         dataInicio !== undefined &&
@@ -85,12 +87,16 @@ export const transacaoService = {
           .toISOString()
           .split("T")[0];
         searchParams.append("dataInicio", dataInicioFormatted);
+        console.log("📅 Data Início formatada:", dataInicioFormatted);
       }
       if (dataFim !== undefined && dataFim !== null && dataFim !== "") {
         const dataFimFormatted = new Date(dataFim).toISOString().split("T")[0];
         searchParams.append("dataFim", dataFimFormatted);
+        console.log("📅 Data Fim formatada:", dataFimFormatted);
       }
     }
+
+    console.log("🔗 Query params:", searchParams.toString());
 
     try {
       let response: AxiosResponse<TransacaoResponse[]>;
@@ -106,11 +112,35 @@ export const transacaoService = {
         );
       }
 
-      const allTransactions = response.data;
+      let allTransactions = response.data;
       console.log(
-        "📊 Total de transações encontradas:",
+        "📊 Total de transações encontradas (antes do filtro):",
         allTransactions.length
       );
+
+      // WORKAROUND: Filtrar transações por data no frontend
+      // TODO: O backend deveria fazer isso, mas não está respeitando os filtros de data
+      if (params?.dataInicio || params?.dataFim) {
+        const dataInicioTimestamp = params.dataInicio
+          ? new Date(params.dataInicio).getTime()
+          : 0;
+        const dataFimTimestamp = params.dataFim
+          ? new Date(params.dataFim).getTime()
+          : Number.MAX_SAFE_INTEGER;
+
+        allTransactions = allTransactions.filter((t) => {
+          const dataTransacao = new Date(t.dataTransacao).getTime();
+          return (
+            dataTransacao >= dataInicioTimestamp &&
+            dataTransacao <= dataFimTimestamp
+          );
+        });
+
+        console.log(
+          "🔍 Total após filtro de data no frontend:",
+          allTransactions.length
+        );
+      }
 
       const page = params?.page || 0;
       const size = params?.size || 10;
@@ -211,8 +241,19 @@ export const transacaoService = {
    * Fallback: Se endpoint /resumo não existir, calcula baseado nas transações
    */
   getResumo: async (dataInicio?: string, dataFim?: string): Promise<any> => {
-    // Obter ID do usuário autenticado
-    const usuarioId = getAuthenticatedUserId();
+    // Obter dados do usuário autenticado
+    const { user } = useUserStore.getState();
+
+    if (!user?.id) {
+      throw new Error("Usuário não autenticado. Faça login para continuar.");
+    }
+
+    console.log(
+      "📊 Buscando resumo para usuário:",
+      user.nome,
+      "- Papel:",
+      user.papel
+    );
 
     // Se não informar datas, usar o mês atual como padrão
     const hoje = new Date();
@@ -226,16 +267,33 @@ export const transacaoService = {
     const dataInicioFinal = dataInicio || inicioMes;
     const dataFimFinal = dataFim || fimMes;
 
-    // Backend requer todos os parâmetros obrigatórios
-    const params = new URLSearchParams({
-      usuarioId: usuarioId,
+    console.log("📅 Filtros de data para resumo:", {
       dataInicio: dataInicioFinal,
       dataFim: dataFimFinal,
     });
 
+    // Construir parâmetros baseado no papel do usuário
+    const params = new URLSearchParams({
+      dataInicio: dataInicioFinal,
+      dataFim: dataFimFinal,
+    });
+
+    // Se NÃO é admin, adicionar usuarioId aos parâmetros
+    // Se é admin, o backend retorna resumo de todos os usuários
+    if (user.papel !== "ADMIN") {
+      params.append("usuarioId", user.id);
+      console.log("👤 Usuário normal: filtrando por usuarioId", user.id);
+    } else {
+      console.log("👑 Admin: buscando resumo de todas as transações");
+    }
+
+    console.log("🔗 Query params para resumo:", params.toString());
+
     const response: AxiosResponse<any> = await api.get(
       `/transacoes/resumo?${params.toString()}`
     );
+
+    console.log("✅ Resumo recebido:", response.data);
 
     return response.data;
   },

@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { AuthService } from "@/services/auth/auth-service";
 import { useUserStore } from "@/stores/auth/use-user-store";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, LogIn, Mail, Shield } from "lucide-react";
@@ -81,41 +80,6 @@ export const Login = () => {
           error.message ||
           "Erro ao fazer login. Verifique suas credenciais."
       );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Função para login rápido com admin (desenvolvimento)
-  const quickAdminLogin = async () => {
-    form.setValue("email", "admin@financeiro.com");
-    form.setValue("password", "admin123");
-    // Disparar o submit automaticamente
-    await form.handleSubmit(onSubmit)();
-  };
-
-  // Função para criar usuário de teste se não existir
-  const createTestUser = async () => {
-    setIsLoading(true);
-    setLoginError(null);
-
-    try {
-      console.log("🧪 Criando usuário de teste...");
-      const response = await AuthService.createTestUser();
-
-      // Fazer login automático após criar usuário
-      const { setUser, setToken } = useUserStore.getState();
-      setUser(response.user);
-      setToken(response.credentials);
-
-      console.log("✅ Usuário criado e login realizado!");
-
-      // Redirecionamento após sucesso
-      const from = (location.state as any)?.from?.pathname || "/";
-      navigate(from, { replace: true });
-    } catch (error: any) {
-      console.error("❌ Erro ao criar usuário:", error);
-      setLoginError("Erro ao criar usuário de teste: " + error.message);
     } finally {
       setIsLoading(false);
     }
@@ -224,54 +188,6 @@ export const Login = () => {
               </Button>
             </form>
           </Form>
-
-          {import.meta.env.DEV && (
-            <>
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Desenvolvimento
-                  </span>
-                </div>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={quickAdminLogin}
-                disabled={isLoading}
-              >
-                🔧 Login Rápido Admin
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={createTestUser}
-                disabled={isLoading}
-              >
-                👤 Criar Usuário Admin
-              </Button>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={async () => {
-                  console.log("🧪 Executando diagnóstico da API...");
-                  await AuthService.testApiEndpoints();
-                }}
-                disabled={isLoading}
-              >
-                🔍 Testar API
-              </Button>
-            </>
-          )}
 
           <div className="text-center">
             <p className="text-sm text-gray-600 dark:text-gray-400">
