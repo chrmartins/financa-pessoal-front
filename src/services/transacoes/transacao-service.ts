@@ -1,3 +1,4 @@
+import { useUserStore } from "@/stores/auth/use-user-store";
 import type {
   CreateTransacaoRequest,
   TransacaoResponse,
@@ -5,6 +6,19 @@ import type {
 } from "@/types";
 import type { AxiosResponse } from "axios";
 import { api } from "../middleware/interceptors";
+
+/**
+ * Função para obter o ID do usuário autenticado
+ */
+const getAuthenticatedUserId = (): string => {
+  const { user } = useUserStore.getState();
+
+  if (!user?.id) {
+    throw new Error("Usuário não autenticado. Faça login para continuar.");
+  }
+
+  return user.id;
+};
 
 /**
  * Parâmetros para filtrar transações
@@ -18,16 +32,6 @@ export interface TransacaoListParams {
   dataFim?: string;
   descricao?: string;
 }
-
-/**
- * IDs de usuários para mock temporário
- * Usando UUIDs reais cadastrados no banco
- */
-export const MOCK_USER_IDS = {
-  DEFAULT: "550e8400-e29b-41d4-a716-446655440001", // UUID real do banco
-  ALTERNATIVE: "550e8400-e29b-41d4-a716-446655440002", // UUID real alternativo
-  TERCEIRO: "550e8400-e29b-41d4-a716-446655440003", // UUID real terceiro
-} as const;
 
 /**
  * Resposta paginada de transações
@@ -50,9 +54,19 @@ export const transacaoService = {
   list: async (
     params?: TransacaoListParams
   ): Promise<TransacaoListResponse> => {
-    // 🚧 MOCK TEMPORÁRIO - usuarioId fixo válido do banco
-    // TODO: Em produção, este ID deve vir da autenticação do usuário logado
-    const usuarioId = MOCK_USER_IDS.DEFAULT;
+    // Obter dados do usuário autenticado
+    const { user } = useUserStore.getState();
+
+    if (!user?.id) {
+      throw new Error("Usuário não autenticado. Faça login para continuar.");
+    }
+
+    console.log(
+      "🔍 Buscando transações para usuário:",
+      user.nome,
+      "- Papel:",
+      user.papel
+    );
 
     const searchParams = new URLSearchParams();
 
@@ -79,11 +93,24 @@ export const transacaoService = {
     }
 
     try {
-      const response: AxiosResponse<TransacaoResponse[]> = await api.get(
-        `/transacoes/usuario/${usuarioId}?${searchParams.toString()}`
-      );
+      let response: AxiosResponse<TransacaoResponse[]>;
+
+      // Se é admin, buscar todas as transações; senão, buscar apenas do usuário
+      if (user.papel === "ADMIN") {
+        console.log("👑 Admin: buscando todas as transações");
+        response = await api.get(`/transacoes?${searchParams.toString()}`);
+      } else {
+        console.log("👤 Usuário normal: buscando transações específicas");
+        response = await api.get(
+          `/transacoes/usuario/${user.id}?${searchParams.toString()}`
+        );
+      }
 
       const allTransactions = response.data;
+      console.log(
+        "📊 Total de transações encontradas:",
+        allTransactions.length
+      );
 
       const page = params?.page || 0;
       const size = params?.size || 10;
@@ -138,9 +165,8 @@ export const transacaoService = {
    * Backend processa automaticamente as parcelas quando recorrente=true
    */
   create: async (data: CreateTransacaoRequest): Promise<TransacaoResponse> => {
-    // 🚧 MOCK TEMPORÁRIO - usuarioId fixo válido do banco
-    // TODO: Em produção, este ID deve vir da autenticação do usuário logado
-    const usuarioId = MOCK_USER_IDS.DEFAULT;
+    // Obter ID do usuário autenticado
+    const usuarioId = getAuthenticatedUserId();
 
     try {
       const response: AxiosResponse<TransacaoResponse> = await api.post(
@@ -185,7 +211,8 @@ export const transacaoService = {
    * Fallback: Se endpoint /resumo não existir, calcula baseado nas transações
    */
   getResumo: async (dataInicio?: string, dataFim?: string): Promise<any> => {
-    const usuarioId = MOCK_USER_IDS.DEFAULT;
+    // Obter ID do usuário autenticado
+    const usuarioId = getAuthenticatedUserId();
 
     // Se não informar datas, usar o mês atual como padrão
     const hoje = new Date();
@@ -222,7 +249,8 @@ export const transacaoService = {
    * Listar transações recorrentes ativas
    */
   listRecorrentes: async (): Promise<TransacaoResponse[]> => {
-    const usuarioId = MOCK_USER_IDS.DEFAULT;
+    // Obter ID do usuário autenticado
+    const usuarioId = getAuthenticatedUserId();
     const response: AxiosResponse<TransacaoResponse[]> = await api.get(
       `/transacoes/recorrentes?usuarioId=${usuarioId}`
     );

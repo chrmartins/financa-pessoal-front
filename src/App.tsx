@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout/layout";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useUIStore } from "@/stores/ui/use-ui-store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -9,6 +10,9 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "@/services/middleware/interceptors";
 
 // Lazy loading das páginas
+const Login = lazy(() =>
+  import("@/pages/login").then((module) => ({ default: module.Login }))
+);
 const Dashboard = lazy(() =>
   import("@/pages/dashboard").then((module) => ({ default: module.Dashboard }))
 );
@@ -17,9 +21,6 @@ const Transacoes = lazy(() =>
     default: module.Transacoes,
   }))
 );
-
-// Importação dos interceptors para configuração automática
-import "@/services/middleware/interceptors";
 
 // Configuração do React Query
 const queryClient = new QueryClient({
@@ -31,6 +32,13 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Componente de loading
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[400px]">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+  </div>
+);
 
 function App() {
   const { setIsMobile } = useUIStore();
@@ -50,20 +58,27 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Layout>
-          <Suspense
-            fallback={
-              <div className="flex items-center justify-center min-h-[400px]">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              </div>
-            }
-          >
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/transacoes" element={<Transacoes />} />
-            </Routes>
-          </Suspense>
-        </Layout>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Rota pública de login */}
+            <Route path="/login" element={<Login />} />
+
+            {/* Rotas protegidas */}
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Routes>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/transacoes" element={<Transacoes />} />
+                    </Routes>
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>

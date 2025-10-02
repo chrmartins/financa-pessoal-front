@@ -1,5 +1,6 @@
 import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
+import { useUserStore } from "@/stores/auth/use-user-store";
 import { useUIStore } from "@/stores/ui/use-ui-store";
 import { cn } from "@/utils";
 import {
@@ -74,6 +75,37 @@ function getPageInfo(pathname: string) {
   };
 
   return routes[pathname as keyof typeof routes] || routes["/"];
+}
+
+// Componente para exibir perfil do usuário
+function UserProfile() {
+  const { user } = useUserStore();
+
+  const getInitials = (name: string) => {
+    const names = name.split(" ");
+    if (names.length >= 2) {
+      return `${names[0][0]}${names[1][0]}`.toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
+
+  return (
+    <div className="flex items-center gap-3">
+      <div className="h-10 w-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-md">
+        <span className="text-sm font-semibold text-white">
+          {user?.nome ? getInitials(user.nome) : "U"}
+        </span>
+      </div>
+      <div className="hidden sm:flex flex-col items-start">
+        <span className="text-sm font-medium text-gray-900 dark:text-gray-100 leading-none">
+          {user?.nome || "Usuário"}
+        </span>
+        <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          {user?.email || "email@example.com"}
+        </span>
+      </div>
+    </div>
+  );
 }
 
 export function Layout({ children }: LayoutProps) {
@@ -183,14 +215,7 @@ export function Layout({ children }: LayoutProps) {
             {/* User Profile and Theme Toggle */}
             <div className="flex items-center gap-3">
               <ModeToggle />
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-gradient-primary flex items-center justify-center">
-                  <span className="text-sm font-medium text-white">U</span>
-                </div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:block">
-                  Usuário
-                </span>
-              </div>
+              <UserProfile />
             </div>
           </div>
         </header>
