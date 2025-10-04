@@ -34,20 +34,20 @@ export const testConnection = async (): Promise<boolean> => {
 };
 
 /**
- * Interceptor para adicionar credenciais Basic Auth
+ * Interceptor para adicionar JWT Bearer token
  */
 api.interceptors.request.use(
   (config) => {
-    const credentials = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
     console.log("🚀 Requisição para:", config.url);
-    console.log("🔑 Credenciais disponíveis:", !!credentials);
+    console.log("🔑 Token disponível:", !!token);
 
-    if (credentials) {
-      config.headers.Authorization = `Basic ${credentials}`;
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
       console.log(
-        "🔑 Basic Auth adicionado à requisição:",
-        `Basic ${credentials.substring(0, 20)}...`
+        "🔑 JWT Bearer adicionado à requisição:",
+        `Bearer ${token.substring(0, 20)}...`
       );
     } else {
       console.warn("⚠️ Nenhum token encontrado para autenticação");
@@ -61,39 +61,71 @@ api.interceptors.request.use(
 );
 
 /**
- * Interceptor para tratar respostas e erros globalmente
+ * Interceptor para tratar respostas e renovar token automaticamente quando expirar
  */
 api.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+
     // Log detalhado do erro
     if (error.response) {
-      if (error.response?.status === 401) {
-        console.error("🚫 Erro 401: Não autorizado. Verificar autenticação.");
-        console.log("📋 Headers da requisição:", error.config?.headers);
+      if (error.response?.status === 401 && !originalRequest._retry) {
+        console.error("🚫 Erro 401: Token expirado ou inválido");
 
-        // Em desenvolvimento, mostrar informações úteis
-        if (import.meta.env.DEV) {
-          console.log(
-            "🔧 Dica: Verifique se o token está sendo enviado corretamente"
-          );
-          console.log("🔧 Token atual:", localStorage.getItem("token"));
+        // Marca que já tentou renovar para evitar loop infinito
+        originalRequest._retry = true;
+
+        try {
+          console.log("� Tentando renovar token...");
+
+          // Importação dinâmica para evitar dependência circular
+          const { AuthService } = await import("../auth/auth-service");
+          const { token } = await AuthService.refreshToken();
+
+          // Atualiza o header da requisição original com novo token
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+
+          console.log("✅ Token renovado, refazendo requisição original");
+
+          // Refaz a requisição original com novo token
+          return api(originalRequest);
+        } catch (refreshError) {
+          console.error("❌ Falha ao renovar token:", refreshError);
+
+          // Se falhar ao renovar, limpa localStorage e redireciona para login
+          localStorage.removeItem("token");
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("usuario");
+
+          // Redireciona para login
+          if (typeof window !== "undefined") {
+            window.location.href = "/login";
+          }
+
+          return Promise.reject(refreshError);
         }
+      }
 
-        // Limpar token inválido
-        localStorage.removeItem("token");
-        // window.location.href = '/login' // Descomente quando tiver tela de login
+      // Em desenvolvimento, mostrar informações úteis
+      if (import.meta.env.DEV) {
+        console.log(
+          "🔧 Dica: Verifique se o token está sendo enviado corretamente"
+        );
+        console.log("🔧 Token atual:", localStorage.getItem("token"));
       }
 
       return Promise.reject(error);
     }
 
     if (error.request) {
+      console.error("❌ Erro de rede:", error.message);
       return Promise.reject(error);
     }
 
+    console.error("❌ Erro desconhecido:", error.message);
     return Promise.reject(error);
   }
 );

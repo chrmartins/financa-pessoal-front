@@ -60,6 +60,20 @@ export function Dashboard() {
   const transacoesRecentesList = transacoesRecentes?.content || [];
   const todasTransacoesMes = transacoesMes?.content || [];
 
+  const resumoApi = resumoFinanceiro
+    ? {
+        saldo: resumoFinanceiro.saldo ?? 0,
+        receitas:
+          resumoFinanceiro.receitas ?? resumoFinanceiro.totalReceitas ?? 0,
+        despesas:
+          resumoFinanceiro.despesas ?? resumoFinanceiro.totalDespesas ?? 0,
+        economias:
+          (resumoFinanceiro.totalReceitas ?? resumoFinanceiro.receitas ?? 0) -
+          (resumoFinanceiro.totalDespesas ?? resumoFinanceiro.despesas ?? 0),
+        totalTransacoes: resumoFinanceiro.totalTransacoes ?? 0,
+      }
+    : null;
+
   // Se houver transações, calcular o resumo localmente
   const resumoData =
     todasTransacoesMes.length > 0
@@ -74,13 +88,14 @@ export function Dashboard() {
       : null;
 
   // Fallback: usar dados calculados localmente ou dados vazios
-  const resumoFinal = resumoData || {
-    saldo: 0,
-    receitas: 0,
-    despesas: 0,
-    economias: 0,
-    totalTransacoes: 0,
-  };
+  const resumoFinal = resumoApi ||
+    resumoData || {
+      saldo: 0,
+      receitas: 0,
+      despesas: 0,
+      economias: 0,
+      totalTransacoes: 0,
+    };
 
   return (
     <div className="space-y-6">

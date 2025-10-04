@@ -45,18 +45,13 @@ export const useUserStore = create<UserState>()(
 
         setToken: (token) => {
           set({ token }, false, "setToken");
-          if (token) {
-            localStorage.setItem("token", token);
-            console.log("🔑 Token salvo no localStorage");
-          } else {
-            localStorage.removeItem("token");
-            console.log("🗑️ Token removido do localStorage");
-          }
+          // Token JWT agora é gerenciado diretamente pelo AuthService no localStorage
+          console.log("� Token atualizado no estado");
         },
 
         setLoading: (isLoading) => set({ isLoading }, false, "setLoading"),
 
-        // Fazer login
+        // Fazer login com JWT
         login: async (email: string, password: string) => {
           const { setUser, setToken, setLoading } = get();
 
@@ -68,9 +63,10 @@ export const useUserStore = create<UserState>()(
             );
 
             setUser(response.user);
-            setToken(response.credentials);
+            setToken(response.token);
 
             console.log("✅ Login realizado com sucesso");
+            console.log("🔑 JWT Token armazenado");
           } catch (error) {
             console.error("❌ Erro no login:", error);
             throw error;
@@ -102,12 +98,15 @@ export const useUserStore = create<UserState>()(
         // Validar token ao inicializar
         validateToken: async () => {
           const token = localStorage.getItem("token");
+          const usuarioData = localStorage.getItem("usuario");
           const { setLoading, setUser, setToken } = get();
 
           setLoading(true);
 
-          if (!token) {
-            console.log("🚫 Nenhum token encontrado - usuário não autenticado");
+          if (!token || !usuarioData) {
+            console.log(
+              "🚫 Nenhum token ou usuário encontrado - não autenticado"
+            );
             set(
               {
                 user: null,
@@ -122,13 +121,16 @@ export const useUserStore = create<UserState>()(
           }
 
           try {
-            const user = await AuthService.validateToken();
+            // Parsear dados do usuário do localStorage
+            const user = JSON.parse(usuarioData);
             setUser(user);
             setToken(token);
-            console.log("✅ Token validado com sucesso");
+            console.log("✅ Token JWT validado com sucesso");
           } catch (error) {
-            console.warn("🚫 Token inválido, fazendo logout");
+            console.warn("🚫 Token ou usuário inválido, fazendo logout");
             localStorage.removeItem("token");
+            localStorage.removeItem("refreshToken");
+            localStorage.removeItem("usuario");
             set(
               { user: null, isAuthenticated: false, token: null },
               false,

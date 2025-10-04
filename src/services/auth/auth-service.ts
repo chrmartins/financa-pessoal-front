@@ -1,14 +1,13 @@
 import { api } from "@/services/middleware/interceptors";
 
-// Tipos para autenticação
+// Tipos para autenticação JWT
 export interface LoginRequest {
   email: string;
-  password: string;
+  senha: string;
 }
 
-export interface LoginResponse {
-  credentials: string; // Base64 encoded email:password
-  user: {
+export interface ApiLoginResponse {
+  usuario: {
     id: string;
     nome: string;
     email: string;
@@ -18,34 +17,20 @@ export interface LoginResponse {
     dataAtualizacao?: string;
     ultimoAcesso?: string;
   };
-  categorias: Array<{
-    id: string;
-    nome: string;
-    descricao: string;
-    tipo: "RECEITA" | "DESPESA";
-    ativa: boolean;
-    dataCriacao: string;
-    dataAtualizacao?: string;
-  }>;
-  transacoes: Array<{
-    id: string;
-    descricao: string;
-    valor: number;
-    dataTransacao: string;
-    tipo: "RECEITA" | "DESPESA";
-    observacoes?: string;
-    dataCriacao: string;
-    dataAtualizacao?: string;
-    categoria: {
-      id: string;
-      nome: string;
-      descricao: string;
-      tipo: "RECEITA" | "DESPESA";
-      ativa: boolean;
-      dataCriacao: string;
-      dataAtualizacao?: string;
-    };
-  }>;
+  token: string; // JWT Access Token
+  refreshToken: string; // JWT Refresh Token
+  expiresIn: number; // Tempo de expiração em milissegundos
+}
+
+export interface LoginResponse {
+  user: ApiLoginResponse["usuario"];
+  token: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+export interface RefreshTokenRequest {
+  refreshToken: string;
 }
 
 export interface RegisterRequest {
@@ -59,125 +44,39 @@ export interface RegisterRequest {
  */
 export class AuthService {
   /**
-   * Fazer login usando Basic Authentication
+   * Fazer login usando endpoint dedicado e preparar credenciais Basic
    */
   static async login(email: string, password: string): Promise<LoginResponse> {
     try {
       console.log("🔐 Tentativa de login para:", email);
 
-      // Criar credenciais Basic Auth
-      const credentials = btoa(`${email}:${password}`);
-
-      // Primeiro, verificar se o usuário existe e está ativo
-      console.log("� Verificando usuário...");
-      const usuariosResponse = await api.get("/usuarios", {
-        headers: {
-          Authorization: `Basic ${credentials}`,
-          "Content-Type": "application/json",
-        },
+      // Chamada ao novo endpoint de autenticação
+      const { data } = await api.post<ApiLoginResponse>("/auth", {
+        email,
+        senha: password,
       });
 
-      console.log("📋 Usuários encontrados:", usuariosResponse.data.length);
-
-      const usuario = usuariosResponse.data.find((u: any) => u.email === email);
-
-      if (!usuario) {
-        console.error("❌ Usuário não encontrado para o email:", email);
-        throw new Error("Usuário não encontrado");
+      if (!data?.usuario || !data?.token || !data?.refreshToken) {
+        console.error("❌ Resposta de login inválida");
+        throw new Error("Resposta de login inválida. Tente novamente.");
       }
 
-      if (!usuario.ativo) {
-        console.error("❌ Usuário inativo:", email);
-        throw new Error(
-          "Usuário inativo. Entre em contato com o administrador."
-        );
-      }
+      console.log("👤 Usuário autenticado:", data.usuario.nome);
+      console.log("🔑 Token JWT recebido");
+      console.log("⏰ Expira em:", data.expiresIn, "ms");
 
-      console.log("✅ Usuário encontrado e ativo:", usuario.nome);
-
-      // Buscar categorias (teste de autorização)
-      console.log("🔐 Testando autorização com categorias...");
-      const categoriasResponse = await api.get("/categorias", {
-        headers: {
-          Authorization: `Basic ${credentials}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      console.log("✅ Categorias carregadas:", categoriasResponse.data.length);
-
-      // Buscar transações
-      console.log("💰 Carregando transações...");
-
-      // Para admin, buscar todas as transações; para usuários normais, buscar apenas as suas
-      let transacoesResponse;
-      if (usuario.papel === "ADMIN") {
-        console.log("👑 Usuário é admin, buscando todas as transações");
-        transacoesResponse = await api.get("/transacoes", {
-          headers: {
-            Authorization: `Basic ${credentials}`,
-            "Content-Type": "application/json",
-          },
-        });
-        console.log(
-          "✅ Todas as transações carregadas (admin):",
-          transacoesResponse.data.length
-        );
-      } else {
-        console.log(
-          "� Usuário normal, buscando transações específicas:",
-          usuario.id
-        );
-        try {
-          transacoesResponse = await api.get(
-            `/transacoes/usuario/${usuario.id}`,
-            {
-              headers: {
-                Authorization: `Basic ${credentials}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-          console.log(
-            "✅ Transações do usuário carregadas:",
-            transacoesResponse.data.length
-          );
-        } catch (userTransactionsError: any) {
-          console.warn("⚠️ Fallback para endpoint geral");
-          transacoesResponse = await api.get("/transacoes", {
-            headers: {
-              Authorization: `Basic ${credentials}`,
-              "Content-Type": "application/json",
-            },
-          });
-          console.log(
-            "✅ Transações gerais carregadas:",
-            transacoesResponse.data.length
-          );
-        }
-      }
-
-      console.log(
-        "📋 Dados das transações:",
-        transacoesResponse.data.slice(0, 3)
-      );
+      // Armazenar tokens
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("refreshToken", data.refreshToken);
+      localStorage.setItem("usuario", JSON.stringify(data.usuario));
 
       console.log("🎉 Login realizado com sucesso!");
 
       return {
-        credentials,
-        user: {
-          id: usuario.id,
-          nome: usuario.nome,
-          email: usuario.email,
-          papel: usuario.papel,
-          ativo: usuario.ativo,
-          dataCriacao: usuario.dataCriacao,
-          dataAtualizacao: usuario.dataAtualizacao,
-          ultimoAcesso: usuario.ultimoAcesso,
-        },
-        categorias: categoriasResponse.data,
-        transacoes: transacoesResponse.data,
+        user: data.usuario,
+        token: data.token,
+        refreshToken: data.refreshToken,
+        expiresIn: data.expiresIn,
       };
     } catch (error: any) {
       console.error("❌ Erro no login:", error);
@@ -215,59 +114,80 @@ export class AuthService {
   }
 
   /**
-   * Fazer logout
+   * Renovar token usando refresh token
    */
-  static async logout(): Promise<void> {
-    // Limpar dados do localStorage será feito pelo store
-    console.log("🚪 Logout realizado");
-  }
+  static async refreshToken(): Promise<LoginResponse> {
+    const refreshToken = localStorage.getItem("refreshToken");
 
-  /**
-   * Validar token (verificar se usuário ainda está autenticado)
-   */
-  static async validateToken(): Promise<any> {
-    const credentials = localStorage.getItem("token");
-
-    if (!credentials) {
-      console.log("🚫 Nenhum token encontrado para validação");
-      throw new Error("Usuário não autenticado");
+    if (!refreshToken) {
+      console.error("❌ Refresh token não encontrado");
+      throw new Error("Refresh token não encontrado");
     }
 
     try {
-      console.log("🔍 Validando token...");
+      console.log("🔄 Renovando token...");
 
-      // Testar se as credenciais ainda são válidas fazendo uma requisição simples
-      const response = await api.get("/categorias", {
-        headers: {
-          Authorization: `Basic ${credentials}`,
-          "Content-Type": "application/json",
-        },
+      const { data } = await api.post<ApiLoginResponse>("/auth/refresh", {
+        refreshToken,
       });
 
-      console.log(
-        "✅ Token válido - categorias acessíveis:",
-        response.data.length
-      );
-
-      // Retornar dados básicos do usuário do localStorage
-      const userData = localStorage.getItem("user");
-      if (userData) {
-        const user = JSON.parse(userData);
-        console.log("👤 Dados do usuário recuperados:", user.nome);
-        return user;
+      if (!data?.usuario || !data?.token || !data?.refreshToken) {
+        console.error("❌ Resposta de refresh inválida");
+        throw new Error("Falha ao renovar token");
       }
 
-      console.warn("⚠️ Dados do usuário não encontrados no localStorage");
-      return null;
+      console.log("✅ Token renovado com sucesso");
+
+      // Atualizar tokens armazenados
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("refreshToken", data.refreshToken);
+      localStorage.setItem("usuario", JSON.stringify(data.usuario));
+
+      return {
+        user: data.usuario,
+        token: data.token,
+        refreshToken: data.refreshToken,
+        expiresIn: data.expiresIn,
+      };
     } catch (error: any) {
-      console.error("❌ Erro na validação do token:", error);
+      console.error("❌ Erro ao renovar token:", error);
 
-      if (error.response?.status === 401) {
-        console.log("🚫 Token inválido - credenciais expiradas ou incorretas");
-      }
+      // Se refresh token inválido, limpa tudo e força novo login
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("usuario");
 
-      throw new Error("Token inválido");
+      throw new Error("Sessão expirada. Faça login novamente.");
     }
+  }
+
+  /**
+   * Fazer logout
+   */
+  static async logout(): Promise<void> {
+    console.log("🚪 Fazendo logout...");
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("usuario");
+    console.log("✅ Logout realizado");
+  }
+
+  /**
+   * Obter usuário autenticado
+   */
+  static getUsuario(): any {
+    const usuarioData = localStorage.getItem("usuario");
+    if (usuarioData) {
+      return JSON.parse(usuarioData);
+    }
+    return null;
+  }
+
+  /**
+   * Verificar se está autenticado
+   */
+  static isAuthenticated(): boolean {
+    return !!localStorage.getItem("token");
   }
 
   /**
@@ -400,7 +320,6 @@ export class AuthService {
   static async createTestUser(): Promise<LoginResponse> {
     // Mock para desenvolvimento
     return {
-      credentials: btoa("admin@financeiro.com:admin123"),
       user: {
         id: "test-id",
         nome: "Admin Sistema",
@@ -409,8 +328,9 @@ export class AuthService {
         ativo: true,
         dataCriacao: new Date().toISOString(),
       },
-      categorias: [],
-      transacoes: [],
+      token: "mock-jwt-token",
+      refreshToken: "mock-refresh-token",
+      expiresIn: 86400000,
     };
   }
 }

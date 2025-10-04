@@ -16,34 +16,12 @@ interface UseTransacaoCreateOptions {
 export function useTransacaoCreate(options?: UseTransacaoCreateOptions) {
   const queryClient = useQueryClient();
 
-
   return useMutation({
     mutationFn: (data: CreateTransacaoRequest) => {
       return transacaoService.create(data);
     },
     onSuccess: async (data) => {
-
-      // Listar TODAS as queries ativas
-      const allQueries = queryClient.getQueryCache().getAll();
-
-      // Procurar queries específicas de transacoes-list
-      const transacoesQueries = allQueries.filter(
-        (q) => Array.isArray(q.queryKey) && q.queryKey[0] === "transacoes-list"
-      );
-      transacoesQueries.forEach((q) => {
-      });
-
-      // Abordagem 1: Por predicate
-      await queryClient.invalidateQueries({
-        predicate: (query) => {
-          const isTransacoesList =
-            Array.isArray(query.queryKey) &&
-            query.queryKey[0] === "transacoes-list";
-          if (isTransacoesList) {
-          }
-          return isTransacoesList;
-        },
-      });
+      await queryClient.invalidateQueries({ queryKey: ["transacoes-list"] });
 
       // Chamar callback opcional se fornecido
       options?.onSuccess?.(data);
