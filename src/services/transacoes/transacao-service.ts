@@ -4,7 +4,9 @@ import type {
   TransacaoResponse,
   UpdateTransacaoRequest,
 } from "@/types";
+import type { ResumoFinanceiro } from "@/utils/financeiro";
 import type { AxiosResponse } from "axios";
+import { isAxiosError } from "axios";
 import { api } from "../middleware/interceptors";
 
 /**
@@ -61,21 +63,12 @@ export const transacaoService = {
       throw new Error("Usuário não autenticado. Faça login para continuar.");
     }
 
-    console.log(
-      "🔍 Buscando transações para usuário:",
-      user.nome,
-      "- Papel:",
-      user.papel
-    );
-
     const searchParams = new URLSearchParams();
 
     // Adicionar apenas os parâmetros aceitos pelo backend
     if (params) {
       // Backend aceita apenas dataInicio e dataFim, ignorar page/size
       const { dataInicio, dataFim } = params;
-
-      console.log("📅 Filtros de data recebidos:", { dataInicio, dataFim });
 
       // Garantir formato ISO (YYYY-MM-DD) para as datas
       if (
@@ -87,36 +80,20 @@ export const transacaoService = {
           .toISOString()
           .split("T")[0];
         searchParams.append("dataInicio", dataInicioFormatted);
-        console.log("📅 Data Início formatada:", dataInicioFormatted);
       }
       if (dataFim !== undefined && dataFim !== null && dataFim !== "") {
         const dataFimFormatted = new Date(dataFim).toISOString().split("T")[0];
         searchParams.append("dataFim", dataFimFormatted);
-        console.log("📅 Data Fim formatada:", dataFimFormatted);
       }
     }
 
-    console.log("🔗 Query params:", searchParams.toString());
-
     try {
-      let response: AxiosResponse<TransacaoResponse[]>;
-
-      // Se é admin, buscar todas as transações; senão, buscar apenas do usuário
-      if (user.papel === "ADMIN") {
-        console.log("👑 Admin: buscando todas as transações");
-        response = await api.get(`/transacoes?${searchParams.toString()}`);
-      } else {
-        console.log("👤 Usuário normal: buscando transações específicas");
-        response = await api.get(
-          `/transacoes/usuario/${user.id}?${searchParams.toString()}`
-        );
-      }
+      // Todos os usuários (incluindo ADMIN) veem apenas suas próprias transações
+      const response: AxiosResponse<TransacaoResponse[]> = await api.get(
+        `/transacoes/usuario/${user.id}?${searchParams.toString()}`
+      );
 
       let allTransactions = response.data;
-      console.log(
-        "📊 Total de transações encontradas (antes do filtro):",
-        allTransactions.length
-      );
 
       // WORKAROUND: Filtrar transações por data no frontend
       // TODO: O backend deveria fazer isso, mas não está respeitando os filtros de data
@@ -135,11 +112,6 @@ export const transacaoService = {
             dataTransacao <= dataFimTimestamp
           );
         });
-
-        console.log(
-          "🔍 Total após filtro de data no frontend:",
-          allTransactions.length
-        );
       }
 
       const page = params?.page || 0;
@@ -198,20 +170,37 @@ export const transacaoService = {
     // Obter ID do usuário autenticado
     const usuarioId = getAuthenticatedUserId();
 
+    console.log("🚀 CRIANDO TRANSAÇÃO:");
+    console.log(
+      "📍 URL:",
+      `${api.defaults.baseURL}/transacoes?usuarioId=${usuarioId}`
+    );
+    console.log("📦 Dados:", JSON.stringify(data, null, 2));
+
     try {
       const response: AxiosResponse<TransacaoResponse> = await api.post(
         `/transacoes?usuarioId=${usuarioId}`,
         data
       );
 
+      console.log("✅ TRANSAÇÃO CRIADA COM SUCESSO:", response.data);
       return response.data;
-    } catch (error: any) {
-      console.error(
-        "❌ SERVICE - Erro:",
-        error.response?.status,
-        error.response?.data
-      );
-      throw error;
+    } catch (error: unknown) {
+      console.error("❌ SERVICE - Erro ao criar transação:", error);
+
+      if (isAxiosError(error)) {
+        console.error("Status:", error.response?.status);
+        console.error("Dados:", error.response?.data);
+        console.error("Headers:", error.response?.headers);
+        console.error("Config URL:", error.config?.url);
+        throw error;
+      }
+
+      if (error instanceof Error) {
+        throw error;
+      }
+
+      throw new Error("Erro ao criar transação.");
     }
   },
 
@@ -240,20 +229,16 @@ export const transacaoService = {
    * Obter resumo financeiro por período
    * Fallback: Se endpoint /resumo não existir, calcula baseado nas transações
    */
-  getResumo: async (dataInicio?: string, dataFim?: string): Promise<any> => {
+  getResumo: async (
+    dataInicio?: string,
+    dataFim?: string
+  ): Promise<ResumoFinanceiro> => {
     // Obter dados do usuário autenticado
     const { user } = useUserStore.getState();
 
     if (!user?.id) {
       throw new Error("Usuário não autenticado. Faça login para continuar.");
     }
-
-    console.log(
-      "📊 Buscando resumo para usuário:",
-      user.nome,
-      "- Papel:",
-      user.papel
-    );
 
     // Se não informar datas, usar o mês atual como padrão
     const hoje = new Date();
@@ -267,35 +252,66 @@ export const transacaoService = {
     const dataInicioFinal = dataInicio || inicioMes;
     const dataFimFinal = dataFim || fimMes;
 
-    console.log("📅 Filtros de data para resumo:", {
-      dataInicio: dataInicioFinal,
-      dataFim: dataFimFinal,
-    });
-
     // Construir parâmetros baseado no papel do usuário
     const params = new URLSearchParams({
       dataInicio: dataInicioFinal,
       dataFim: dataFimFinal,
     });
 
-    // Se NÃO é admin, adicionar usuarioId aos parâmetros
-    // Se é admin, o backend retorna resumo de todos os usuários
-    if (user.papel !== "ADMIN") {
-      params.append("usuarioId", user.id);
-      console.log("👤 Usuário normal: filtrando por usuarioId", user.id);
-    } else {
-      console.log("👑 Admin: buscando resumo de todas as transações");
-    }
+    // Todos os usuários (incluindo ADMIN) veem apenas seu próprio resumo
+    params.append("usuarioId", user.id);
 
-    console.log("🔗 Query params para resumo:", params.toString());
+    const response: AxiosResponse<ResumoFinanceiro | Record<string, unknown>> =
+      await api.get(`/transacoes/resumo?${params.toString()}`);
 
-    const response: AxiosResponse<any> = await api.get(
-      `/transacoes/resumo?${params.toString()}`
-    );
+    const resumoBruto = response.data ?? {};
+    const resumoRecord = resumoBruto as Record<string, unknown>;
 
-    console.log("✅ Resumo recebido:", response.data);
+    const getNumber = (...keys: string[]): number => {
+      for (const key of keys) {
+        const value = resumoRecord[key];
 
-    return response.data;
+        if (value === undefined || value === null) {
+          continue;
+        }
+
+        if (typeof value === "number") {
+          if (!Number.isNaN(value)) {
+            return value;
+          }
+          continue;
+        }
+
+        if (typeof value === "string" && value.trim() !== "") {
+          const parsed = Number(value);
+          if (!Number.isNaN(parsed)) {
+            return parsed;
+          }
+        }
+      }
+      return 0;
+    };
+
+    const saldo = getNumber("saldo", "totalSaldo");
+    const receitas = getNumber("receitas", "totalReceitas");
+    const despesas = getNumber("despesas", "totalDespesas");
+    const totalTransacoes = getNumber("totalTransacoes", "quantidade", "total");
+
+    const economiaInformada = getNumber("economias", "totalEconomias");
+    const economias = economiaInformada || (saldo > 0 ? saldo * 0.2 : 0);
+
+    const resumoNormalizado: ResumoFinanceiro = {
+      saldo: isNaN(saldo) ? 0 : saldo,
+      receitas: isNaN(receitas) ? 0 : receitas,
+      despesas: isNaN(despesas) ? 0 : despesas,
+      economias: isNaN(economias) ? 0 : economias,
+      totalTransacoes: isNaN(totalTransacoes) ? 0 : totalTransacoes,
+    };
+
+    console.log("📊 RESUMO FINANCEIRO - Resposta do backend:", resumoBruto);
+    console.log("📊 RESUMO NORMALIZADO:", resumoNormalizado);
+
+    return resumoNormalizado;
   },
 
   /**

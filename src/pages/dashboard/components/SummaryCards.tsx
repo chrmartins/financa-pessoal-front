@@ -62,6 +62,17 @@ export function SummaryCards({ data, isLoading }: SummaryCardsProps) {
     );
   }
 
+  // Determinar cor do saldo baseado se é positivo ou negativo
+  const saldoColor =
+    data.saldo >= 0
+      ? "text-emerald-600 dark:text-emerald-400"
+      : "text-red-600 dark:text-red-400";
+
+  const saldoIconColor =
+    data.saldo >= 0
+      ? "text-emerald-600 dark:text-emerald-400"
+      : "text-red-600 dark:text-red-400";
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <Card className="card-gradient dark:bg-gray-800/95 dark:border-gray-700/50">
@@ -69,10 +80,10 @@ export function SummaryCards({ data, isLoading }: SummaryCardsProps) {
           <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Saldo do Mês
           </CardTitle>
-          <DollarSign className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          <DollarSign className={`h-4 w-4 ${saldoIconColor}`} />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+          <div className={`text-2xl font-bold ${saldoColor}`}>
             {formatCurrency(data.saldo)}
           </div>
           {data.saldoComparacao !== undefined && (

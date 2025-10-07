@@ -11,9 +11,11 @@ import {
   Settings,
   Tags,
   TrendingUp,
+  Users,
   X,
+  type LucideIcon,
 } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast, Toaster } from "sonner";
 import { Logo } from "./logo.tsx";
@@ -22,7 +24,14 @@ interface LayoutProps {
   children: ReactNode;
 }
 
-const menuItems = [
+interface MenuItem {
+  title: string;
+  href: string;
+  icon: LucideIcon;
+  adminOnly?: boolean;
+}
+
+const menuItems: MenuItem[] = [
   {
     title: "Dashboard",
     href: "/",
@@ -37,6 +46,12 @@ const menuItems = [
     title: "Categorias",
     href: "/categorias",
     icon: Tags,
+  },
+  {
+    title: "Usuários",
+    href: "/usuarios",
+    icon: Users,
+    adminOnly: true, // Apenas ADMIN pode gerenciar usuários (CRUD)
   },
   {
     title: "Relatórios",
@@ -64,6 +79,10 @@ function getPageInfo(pathname: string) {
     "/categorias": {
       title: "Categorias",
       description: "Organize suas categorias",
+    },
+    "/usuarios": {
+      title: "Usuários",
+      description: "Gerencie os usuários do sistema",
     },
     "/relatorios": {
       title: "Relatórios",
@@ -178,8 +197,17 @@ function UserProfile() {
 
 export function Layout({ children }: LayoutProps) {
   const { sidebarOpen, toggleSidebar, isMobile } = useUIStore();
+  const { user } = useUserStore();
   const location = useLocation();
   const pageInfo = getPageInfo(location.pathname);
+
+  // Filtrar itens do menu baseado no papel do usuário
+  const filteredMenuItems = menuItems.filter((item) => {
+    // Se o item não tem restrição, mostra para todos
+    if (!item.adminOnly) return true;
+    // Se tem restrição, só mostra para ADMIN
+    return user?.papel === "ADMIN";
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
@@ -220,7 +248,7 @@ export function Layout({ children }: LayoutProps) {
 
           {/* Navigation */}
           <nav className="flex-1 space-y-1 px-4 py-6">
-            {menuItems.map((item) => {
+            {filteredMenuItems.map((item) => {
               const isActive = location.pathname === item.href;
               return (
                 <Link

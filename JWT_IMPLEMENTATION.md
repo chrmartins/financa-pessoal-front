@@ -147,7 +147,7 @@ Senha: admin123
 
 ```
 Email: admin@financeiro.com
-Senha: password
+Senha: teste123
 ```
 
 ---

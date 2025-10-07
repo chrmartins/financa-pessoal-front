@@ -21,6 +21,7 @@ const Transacoes = lazy(() =>
     default: module.Transacoes,
   }))
 );
+const Usuarios = lazy(() => import("@/pages/usuarios"));
 
 // Configuração do React Query
 const queryClient = new QueryClient({
@@ -72,6 +73,7 @@ function App() {
                     <Routes>
                       <Route path="/" element={<Dashboard />} />
                       <Route path="/transacoes" element={<Transacoes />} />
+                      <Route path="/usuarios" element={<Usuarios />} />
                     </Routes>
                   </Layout>
                 </ProtectedRoute>

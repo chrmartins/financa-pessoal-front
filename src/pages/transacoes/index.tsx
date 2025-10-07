@@ -2,12 +2,29 @@ import { TransacaoModal } from "@/components/transacaoModal";
 import { Button } from "@/components/ui/button";
 import { useMonthSelector } from "@/hooks/use-month-selector";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTransacoesList } from "../../hooks/queries/transacoes/use-transacoes-list";
 import { TransacoesList } from "./components/TransacoesList";
 
 export function Transacoes() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [shouldNavigate, setShouldNavigate] = useState(false);
+  const navigate = useNavigate();
+
+  const handleCloseModal = () => {
+    setCreateModalOpen(false);
+    // Marcar que deve navegar após fechar
+    setShouldNavigate(true);
+  };
+
+  // Navegar para dashboard após modal fechar
+  useEffect(() => {
+    if (shouldNavigate && !createModalOpen) {
+      navigate("/");
+      setShouldNavigate(false);
+    }
+  }, [shouldNavigate, createModalOpen, navigate]);
 
   // Hook para gerenciar seleção de mês
   const {
@@ -89,10 +106,7 @@ export function Transacoes() {
       <TransacoesList transacoes={transacoesOrdenadas} isLoading={isLoading} />
 
       {/* Modal para criar transação */}
-      <TransacaoModal
-        open={createModalOpen}
-        onClose={() => setCreateModalOpen(false)}
-      />
+      <TransacaoModal open={createModalOpen} onClose={handleCloseModal} />
     </div>
   );
 }

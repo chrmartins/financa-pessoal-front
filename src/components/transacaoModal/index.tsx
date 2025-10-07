@@ -22,7 +22,7 @@ import type { CreateTransacaoRequest } from "@/types";
 import { formatCurrencyInput, parseCurrencyInput } from "@/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CalendarDays, Clock, Loader2, RefreshCw } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -36,6 +36,7 @@ export function TransacaoModal({
   transacao,
 }: TransacaoModalProps) {
   const isEditing = Boolean(transacao);
+  const successHandledRef = useRef(false);
 
   const {
     register,
@@ -69,18 +70,28 @@ export function TransacaoModal({
     isSuccess,
     isError,
     error,
+    reset: resetMutation,
   } = useTransacaoCreate();
 
   useEffect(() => {
-    if (isSuccess) {
+    if (isSuccess && !successHandledRef.current) {
+      successHandledRef.current = true;
+      console.log("✅ MODAL - Transação criada com sucesso, fechando modal...");
       toast.success(
         isEditing
           ? "Transação atualizada com sucesso!"
           : "Transação criada com sucesso!"
       );
-      onClose();
+
+      // Pequeno delay para garantir que as queries foram invalidadas
+      setTimeout(() => {
+        console.log("🚪 MODAL - Fechando modal após delay...");
+        resetMutation(); // Resetar mutation antes de fechar
+        successHandledRef.current = false;
+        onClose();
+      }, 300);
     }
-  }, [isSuccess, isEditing, onClose]);
+  }, [isSuccess, isEditing, onClose, resetMutation]);
 
   useEffect(() => {
     if (isError && error) {
@@ -112,6 +123,10 @@ export function TransacaoModal({
   // Resetar formulário quando abrir/fechar modal
   useEffect(() => {
     if (open) {
+      // Resetar mutation ao abrir modal
+      resetMutation();
+      successHandledRef.current = false;
+
       if (transacao) {
         const valorEmCents = Math.round(transacao.valor * 100).toString();
         reset({
@@ -137,7 +152,7 @@ export function TransacaoModal({
         });
       }
     }
-  }, [open, transacao, reset]);
+  }, [open, transacao, reset, resetMutation]);
 
   // Função para formatar valor conforme usuário digita
   const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,7 +162,10 @@ export function TransacaoModal({
   };
 
   const handleSubmit = onSubmit((data: FormData) => {
+    console.log("📝 MODAL - Formulário submetido:", data);
+
     const valorNumerico = parseCurrencyInput(data.valorFormatado);
+    console.log("💰 MODAL - Valor parseado:", valorNumerico);
 
     if (!data.categoriaId) {
       toast.error("Por favor, selecione uma categoria");
@@ -174,11 +192,12 @@ export function TransacaoModal({
         : undefined,
     };
 
+    console.log("📤 MODAL - Chamando createTransacao com:", requestData);
     createTransacao(requestData);
   });
 
   const categoriaId = watch("categoriaId");
-  
+
   const categoriaSelecionada = categorias.find((c) => c.id === categoriaId);
 
   return (

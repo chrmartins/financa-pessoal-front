@@ -1,29 +1,38 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 /**
  * Hook para gerenciar a seleção de mês/ano no dashboard
  */
 export function useMonthSelector() {
-  const now = new Date();
+  const now = useMemo(() => new Date(), []); // Memoizar para evitar re-renders
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth()); // 0-11
 
-  // Calcular datas de início e fim do mês selecionado
-  const firstDayOfMonth = new Date(selectedYear, selectedMonth, 1);
-  const lastDayOfMonth = new Date(selectedYear, selectedMonth + 1, 0);
+  // Calcular datas de início e fim do mês selecionado (memoizado)
+  const { dataInicio, dataFim, formattedMonth } = useMemo(() => {
+    const firstDayOfMonth = new Date(selectedYear, selectedMonth, 1);
+    const lastDayOfMonth = new Date(selectedYear, selectedMonth + 1, 0);
 
-  const dataInicio = firstDayOfMonth.toISOString().split("T")[0];
-  const dataFim = lastDayOfMonth.toISOString().split("T")[0];
+    const inicio = firstDayOfMonth.toISOString().split("T")[0];
+    const fim = lastDayOfMonth.toISOString().split("T")[0];
 
-  // Formatar mês para exibição
-  const monthName = new Date(selectedYear, selectedMonth, 1).toLocaleDateString(
-    "pt-BR",
-    {
+    // Formatar mês para exibição
+    const monthName = new Date(
+      selectedYear,
+      selectedMonth,
+      1
+    ).toLocaleDateString("pt-BR", {
       month: "long",
       year: "numeric",
-    }
-  );
-  const formattedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+    });
+    const formatted = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+    return {
+      dataInicio: inicio,
+      dataFim: fim,
+      formattedMonth: formatted,
+    };
+  }, [selectedYear, selectedMonth]);
 
   // Navegação entre meses
   const goToPreviousMonth = () => {

@@ -16,14 +16,20 @@ export interface TransacoesParams {
 /**
  * Hook para buscar lista de transações com filtros opcionais
  */
-export function useTransacoesList(params?: TransacoesParams) {
-  const queryKey = ["transacoes-list", params];
+export function useTransacoesList(
+  params?: TransacoesParams & { enabled?: boolean }
+) {
+  const { enabled = true, ...queryParams } = params || {};
+  const queryKey = ["transacoes-list", queryParams];
 
   const result = useQuery({
     queryKey,
     queryFn: () => {
-      return transacaoService.list(params);
+      return transacaoService.list(queryParams);
     },
+    enabled,
+    staleTime: 5 * 60 * 1000, // 5 minutos - evita refetch desnecessário
+    gcTime: 10 * 60 * 1000, // 10 minutos - mantém cache por mais tempo
     select: (data) => {
       const transacoesOrdenadas = [...data.content].sort((a, b) => {
         const dateA = new Date(a.dataCriacao).getTime();
@@ -37,12 +43,6 @@ export function useTransacoesList(params?: TransacoesParams) {
       };
     },
   });
-
-  if (result.data) {
-      result.data.content.length
-  }
-  if (result.error) {
-  }
 
   return result;
 }

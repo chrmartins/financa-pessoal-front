@@ -1,9 +1,28 @@
 export interface Usuario {
-  id: number;
+  id: string; // UUID string
   nome: string;
   email: string;
-  createdAt: string;
-  updatedAt: string;
+  papel: "ADMIN" | "USER";
+  ativo: boolean;
+  dataCriacao: string;
+  dataAtualizacao: string | null;
+  ultimoAcesso: string | null;
+}
+
+export interface CreateUsuarioRequest {
+  nome: string;
+  email: string;
+  senha: string;
+  papel: "ADMIN" | "USER";
+  ativo: boolean;
+}
+
+export interface UpdateUsuarioRequest {
+  nome?: string;
+  email?: string;
+  senha?: string;
+  papel?: "ADMIN" | "USER";
+  ativo?: boolean;
 }
 
 export interface Categoria {

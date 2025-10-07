@@ -12,7 +12,6 @@ export function useTransacaoUpdate() {
     mutationFn: ({ id, data }: { id: string; data: UpdateTransacaoRequest }) =>
       transacaoService.update(id, data),
     onSuccess: (_, variables) => {
-
       // Invalida todas as queries de transações-list
       queryClient.invalidateQueries({
         predicate: (query) => {
@@ -31,6 +30,14 @@ export function useTransacaoUpdate() {
         predicate: (query) => {
           const queryKey = query.queryKey;
           return Array.isArray(queryKey) && queryKey[0] === "resumo-financeiro";
+        },
+      });
+
+      // Invalida dados de tendência do gráfico
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = query.queryKey;
+          return Array.isArray(queryKey) && queryKey[0] === "transacoes-trend";
         },
       });
     },

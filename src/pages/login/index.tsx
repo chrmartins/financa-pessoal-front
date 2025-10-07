@@ -18,8 +18,9 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { useUserStore } from "@/stores/auth/use-user-store";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { isAxiosError } from "axios";
 import { Eye, EyeOff, LogIn, Mail, Shield } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
@@ -39,6 +40,12 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
+type AuthLocationState = {
+  from?: {
+    pathname: string;
+  };
+};
+
 export const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -46,6 +53,7 @@ export const Login = () => {
 
   const { isAuthenticated, login } = useUserStore();
   const location = useLocation();
+  const locationState = location.state as AuthLocationState | null;
   const navigate = useNavigate();
 
   const form = useForm<LoginFormData>({
@@ -56,30 +64,72 @@ export const Login = () => {
     },
   });
 
+  // DEBUG: Log do estado de autenticação
+  console.log("🔍 LOGIN RENDER - isAuthenticated:", isAuthenticated);
+  console.log("🔍 LOGIN RENDER - location.pathname:", location.pathname);
+
+  // Monitorar mudanças no isAuthenticated e redirecionar automaticamente
+  const destination = useMemo(
+    () => locationState?.from?.pathname ?? "/",
+    [locationState]
+  );
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log(
+        "🔄 useEffect - Detectou isAuthenticated=true, redirecionando para:",
+        destination
+      );
+      // Pequeno delay para garantir que o estado foi persistido
+      setTimeout(() => {
+        navigate(destination, { replace: true });
+      }, 100);
+    }
+  }, [destination, isAuthenticated, navigate]);
+
   // Se já está autenticado, redireciona (APÓS todos os hooks)
   if (isAuthenticated) {
-    const from = (location.state as any)?.from?.pathname || "/";
-    return <Navigate to={from} replace />;
+    console.log(
+      "✅ LOGIN - REDIRECIONANDO! isAuthenticated=true, destino:",
+      destination
+    );
+    return <Navigate to={destination} replace />;
   }
 
   const onSubmit = async (data: LoginFormData) => {
+    console.log("🚀 LOGIN SUBMIT - Iniciando...");
+    console.log("📧 LOGIN SUBMIT - Email:", data.email);
+
     setIsLoading(true);
     setLoginError(null);
 
     try {
+      console.log("📞 LOGIN SUBMIT - Chamando login()...");
       await login(data.email, data.password);
 
+      console.log("✅ LOGIN SUBMIT - login() completou com sucesso!");
+
+      // Verificar estado após login
+      const currentState = useUserStore.getState();
+      console.log("🔍 LOGIN SUBMIT - Estado após login:", {
+        isAuthenticated: currentState.isAuthenticated,
+        user: currentState.user?.nome,
+        hasToken: !!currentState.token,
+      });
+
       // Redirecionamento manual após login bem-sucedido
-      const from = (location.state as any)?.from?.pathname || "/";
-      console.log("🚀 Login bem-sucedido! Redirecionando para:", from);
-      navigate(from, { replace: true });
-    } catch (error: any) {
-      console.error("Erro no login:", error);
-      setLoginError(
-        error.response?.data?.message ||
-          error.message ||
-          "Erro ao fazer login. Verifique suas credenciais."
-      );
+      console.log("🚀 LOGIN SUBMIT - Navegando para:", destination);
+      navigate(destination, { replace: true });
+    } catch (error: unknown) {
+      console.error("❌ LOGIN SUBMIT - Erro no login:", error);
+
+      const message = isAxiosError(error)
+        ? error.response?.data?.message || error.message
+        : error instanceof Error
+        ? error.message
+        : "Erro ao fazer login. Verifique suas credenciais.";
+
+      setLoginError(message);
     } finally {
       setIsLoading(false);
     }

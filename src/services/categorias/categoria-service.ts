@@ -14,43 +14,31 @@ export const categoriaService = {
    * Listar todas as categorias
    */
   list: async (): Promise<CategoriaResponse[]> => {
-    try {
-      const response: AxiosResponse<CategoriaResponse[]> = await api.get(
-        "/categorias"
-      );
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response: AxiosResponse<CategoriaResponse[]> = await api.get(
+      "/categorias"
+    );
+    return response.data;
   },
 
   /**
    * Buscar categoria por ID
    */
   getById: async (id: number): Promise<CategoriaResponse> => {
-    try {
-      const response: AxiosResponse<CategoriaResponse> = await api.get(
-        `/categorias/${id}`
-      );
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response: AxiosResponse<CategoriaResponse> = await api.get(
+      `/categorias/${id}`
+    );
+    return response.data;
   },
 
   /**
    * Criar nova categoria
    */
   create: async (data: CreateCategoriaRequest): Promise<CategoriaResponse> => {
-    try {
-      const response: AxiosResponse<CategoriaResponse> = await api.post(
-        "/categorias",
-        data
-      );
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response: AxiosResponse<CategoriaResponse> = await api.post(
+      "/categorias",
+      data
+    );
+    return response.data;
   },
 
   /**
@@ -82,7 +70,7 @@ export const testCategorias = async (): Promise<boolean> => {
   try {
     await categoriaService.list();
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 };

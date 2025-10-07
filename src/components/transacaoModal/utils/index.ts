@@ -1,9 +1,14 @@
 import { parseCurrencyInput } from "@/utils";
 
+interface CategoriaResumo {
+  nome: string;
+  cor?: string | null;
+}
+
 /**
  * Função para gerar cor baseada no nome da categoria
  */
-export const getCategoriaColor = (categoria: any) => {
+export const getCategoriaColor = (categoria: CategoriaResumo) => {
   if (categoria.cor) {
     return categoria.cor;
   }

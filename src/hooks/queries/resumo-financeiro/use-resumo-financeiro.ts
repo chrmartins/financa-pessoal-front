@@ -17,6 +17,8 @@ export function useResumoFinanceiro(params?: UseResumoFinanceiroParams) {
     queryKey: ["resumo-financeiro", { dataInicio, dataFim }],
     queryFn: () => transacaoService.getResumo(dataInicio, dataFim),
     enabled,
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 5 * 60 * 1000, // 5 minutos - evita refetch automático
+    gcTime: 10 * 60 * 1000, // 10 minutos - mantém cache por mais tempo
+    refetchOnWindowFocus: false, // Não refaz a query ao focar na janela
   });
 }

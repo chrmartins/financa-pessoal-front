@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { TrendingUp } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import {
   CartesianGrid,
   Legend,
@@ -14,14 +15,37 @@ import {
 import { useTrendData } from "../../../hooks/queries/transacoes/use-trend-data";
 
 // Componente customizado para tooltip
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
+type TrendTooltipEntry = {
+  color?: string;
+  dataKey?: string | number;
+  name?: string;
+  value?: number | string;
+};
+
+interface TrendTooltipProps {
+  active?: boolean;
+  payload?: TrendTooltipEntry[];
+  label?: string | number;
+}
+
+const CustomTooltip = ({ active, payload, label }: TrendTooltipProps) => {
+  if (active && payload?.length) {
     return (
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg p-3">
         <p className="text-gray-900 dark:text-gray-100 font-medium">{`${label}`}</p>
-        {payload.map((entry: any, index: number) => (
-          <p key={index} style={{ color: entry.color }} className="text-sm">
-            {`${entry.name}: R$ ${entry.value.toLocaleString("pt-BR")}`}
+        {payload.map((entry) => (
+          <p
+            key={
+              typeof entry.dataKey === "string"
+                ? entry.dataKey
+                : entry.dataKey ?? entry.name
+            }
+            style={{ color: entry.color ?? "currentColor" }}
+            className="text-sm"
+          >
+            {`${entry.name ?? "Valor"}: R$ ${Number(
+              entry.value ?? 0
+            ).toLocaleString("pt-BR")}`}
           </p>
         ))}
       </div>
@@ -31,8 +55,34 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export function TrendChart() {
-  // Buscar dados reais dos últimos 6 meses
-  const { data: trendData, isLoading, error } = useTrendData();
+  const [isVisible, setIsVisible] = useState(false);
+  const chartRef = useRef<HTMLDivElement>(null);
+
+  // Intersection Observer para detectar quando o gráfico entra na viewport
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect(); // Desconecta após primeira visualização
+        }
+      },
+      { threshold: 0.1 } // Dispara quando 10% do componente está visível
+    );
+
+    if (chartRef.current) {
+      observer.observe(chartRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Buscar dados reais dos últimos 6 meses SOMENTE quando visível
+  const {
+    data: trendData,
+    isLoading,
+    error,
+  } = useTrendData({ enabled: isVisible });
 
   if (error) {
     return (
@@ -53,7 +103,10 @@ export function TrendChart() {
   }
 
   return (
-    <Card className="card-gradient dark:bg-gray-800/95 dark:border-gray-700/50">
+    <Card
+      ref={chartRef}
+      className="card-gradient dark:bg-gray-800/95 dark:border-gray-700/50"
+    >
       <CardHeader>
         <CardTitle className="flex items-center gap-2 dark:text-gray-100">
           <TrendingUp className="h-5 w-5" />
@@ -61,7 +114,11 @@ export function TrendChart() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
+        {!isVisible ? (
+          <div className="h-64 w-full flex items-center justify-center text-gray-500">
+            Carregando gráfico...
+          </div>
+        ) : isLoading ? (
           <div className="h-64 w-full flex items-center justify-center">
             <Spinner size="lg" />
           </div>

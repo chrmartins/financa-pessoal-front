@@ -95,6 +95,40 @@ export const loginSchema = z.object({
     .min(6, "Senha deve ter pelo menos 6 caracteres"),
 });
 
+// Schema para criar usuário
+export const createUsuarioSchema = z.object({
+  nome: z
+    .string()
+    .min(1, "Nome é obrigatório")
+    .min(2, "Nome deve ter pelo menos 2 caracteres")
+    .max(100, "Nome deve ter no máximo 100 caracteres"),
+  email: z
+    .string()
+    .min(1, "E-mail é obrigatório")
+    .email("E-mail deve ser válido"),
+  senha: z
+    .string()
+    .min(1, "Senha é obrigatória")
+    .min(6, "Senha deve ter pelo menos 6 caracteres"),
+  papel: z.enum(["ADMIN", "USER"], {
+    message: "Papel deve ser ADMIN ou USER",
+  }),
+  ativo: z.boolean().default(true),
+});
+
+// Schema para atualizar usuário (todos os campos opcionais)
+export const updateUsuarioSchema = z.object({
+  nome: z
+    .string()
+    .min(2, "Nome deve ter pelo menos 2 caracteres")
+    .max(100, "Nome deve ter no máximo 100 caracteres")
+    .optional(),
+  email: z.string().email("E-mail deve ser válido").optional(),
+  senha: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").optional(),
+  papel: z.enum(["ADMIN", "USER"]).optional(),
+  ativo: z.boolean().optional(),
+});
+
 // Types derivados dos schemas
 export type CategoriaFormData = z.infer<typeof categoriaSchema>;
 export type UpdateCategoriaFormData = z.infer<typeof updateCategoriaSchema>;
@@ -102,3 +136,5 @@ export type TransacaoFormData = z.infer<typeof transacaoSchema>;
 export type UpdateTransacaoFormData = z.infer<typeof updateTransacaoSchema>;
 export type TransacaoFiltersData = z.infer<typeof transacaoFiltersSchema>;
 export type LoginFormData = z.infer<typeof loginSchema>;
+export type CreateUsuarioFormData = z.infer<typeof createUsuarioSchema>;
+export type UpdateUsuarioFormData = z.infer<typeof updateUsuarioSchema>;

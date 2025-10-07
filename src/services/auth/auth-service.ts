@@ -1,4 +1,5 @@
 import { api } from "@/services/middleware/interceptors";
+import { isAxiosError } from "axios";
 
 // Tipos para autenticação JWT
 export interface LoginRequest {
@@ -48,7 +49,8 @@ export class AuthService {
    */
   static async login(email: string, password: string): Promise<LoginResponse> {
     try {
-      console.log("🔐 Tentativa de login para:", email);
+      console.log("🔐 AUTH SERVICE - Tentativa de login para:", email);
+      console.log("🌐 AUTH SERVICE - URL da API:", api.defaults.baseURL);
 
       // Chamada ao novo endpoint de autenticação
       const { data } = await api.post<ApiLoginResponse>("/auth", {
@@ -56,21 +58,24 @@ export class AuthService {
         senha: password,
       });
 
+      console.log("📦 AUTH SERVICE - Resposta recebida:", data);
+
       if (!data?.usuario || !data?.token || !data?.refreshToken) {
-        console.error("❌ Resposta de login inválida");
+        console.error("❌ AUTH SERVICE - Resposta de login inválida");
         throw new Error("Resposta de login inválida. Tente novamente.");
       }
 
-      console.log("👤 Usuário autenticado:", data.usuario.nome);
-      console.log("🔑 Token JWT recebido");
-      console.log("⏰ Expira em:", data.expiresIn, "ms");
+      console.log("👤 AUTH SERVICE - Usuário autenticado:", data.usuario.nome);
+      console.log("🔑 AUTH SERVICE - Token JWT recebido");
+      console.log("⏰ AUTH SERVICE - Expira em:", data.expiresIn, "ms");
 
       // Armazenar tokens
       localStorage.setItem("token", data.token);
       localStorage.setItem("refreshToken", data.refreshToken);
       localStorage.setItem("usuario", JSON.stringify(data.usuario));
 
-      console.log("🎉 Login realizado com sucesso!");
+      console.log("💾 AUTH SERVICE - Dados salvos no localStorage");
+      console.log("🎉 AUTH SERVICE - Login realizado com sucesso!");
 
       return {
         user: data.usuario,
@@ -78,38 +83,58 @@ export class AuthService {
         refreshToken: data.refreshToken,
         expiresIn: data.expiresIn,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("❌ Erro no login:", error);
 
-      if (error.response?.status === 401) {
-        console.error("🚫 Erro 401 - Credenciais inválidas");
-        throw new Error("Email ou senha incorretos");
+      if (isAxiosError(error)) {
+        const status = error.response?.status;
+
+        if (status === 401) {
+          console.error("🚫 Erro 401 - Credenciais inválidas");
+          throw new Error("Email ou senha incorretos");
+        }
+
+        if (status === 403) {
+          console.error("🚫 Erro 403 - Acesso negado");
+          throw new Error("Acesso negado. Verifique suas permissões.");
+        }
+
+        if (status && status >= 500) {
+          console.error("🔥 Erro do servidor:", status);
+          throw new Error(
+            "Erro interno do servidor. Tente novamente mais tarde."
+          );
+        }
+
+        // Log detalhado para debug
+        console.error("📊 Detalhes do erro:", {
+          status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          config: {
+            url: error.config?.url,
+            headers: error.config?.headers,
+          },
+        });
+
+        const message =
+          (typeof error.response?.data === "object" &&
+          error.response?.data !== null &&
+          "message" in error.response.data &&
+          typeof error.response.data.message === "string"
+            ? error.response.data.message
+            : undefined) ||
+          error.message ||
+          "Erro ao fazer login. Tente novamente.";
+
+        throw new Error(message);
       }
 
-      if (error.response?.status === 403) {
-        console.error("🚫 Erro 403 - Acesso negado");
-        throw new Error("Acesso negado. Verifique suas permissões.");
+      if (error instanceof Error) {
+        throw new Error(error.message);
       }
 
-      if (error.response?.status >= 500) {
-        console.error("🔥 Erro do servidor:", error.response.status);
-        throw new Error(
-          "Erro interno do servidor. Tente novamente mais tarde."
-        );
-      }
-
-      // Log detalhado para debug
-      console.error("📊 Detalhes do erro:", {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        config: {
-          url: error.config?.url,
-          headers: error.config?.headers,
-        },
-      });
-
-      throw new Error(error.message || "Erro ao fazer login. Tente novamente.");
+      throw new Error("Erro ao fazer login. Tente novamente.");
     }
   }
 
@@ -149,7 +174,7 @@ export class AuthService {
         refreshToken: data.refreshToken,
         expiresIn: data.expiresIn,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("❌ Erro ao renovar token:", error);
 
       // Se refresh token inválido, limpa tudo e força novo login
@@ -157,7 +182,13 @@ export class AuthService {
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("usuario");
 
-      throw new Error("Sessão expirada. Faça login novamente.");
+      const message = isAxiosError(error)
+        ? error.response?.data?.message || error.message
+        : error instanceof Error
+        ? error.message
+        : "Sessão expirada. Faça login novamente.";
+
+      throw new Error(message || "Sessão expirada. Faça login novamente.");
     }
   }
 
@@ -173,14 +204,34 @@ export class AuthService {
   }
 
   /**
+   * Validar se o token ainda é válido fazendo uma chamada à API
+   */
+  static async validateToken(): Promise<boolean> {
+    try {
+      // Faz uma chamada simples para validar o token
+      await api.get("/usuarios/atual");
+      return true;
+    } catch {
+      console.warn("🚫 Token inválido ou expirado");
+      return false;
+    }
+  }
+
+  /**
    * Obter usuário autenticado
    */
-  static getUsuario(): any {
+  static getUsuario(): ApiLoginResponse["usuario"] | null {
     const usuarioData = localStorage.getItem("usuario");
-    if (usuarioData) {
-      return JSON.parse(usuarioData);
+    if (!usuarioData) {
+      return null;
     }
-    return null;
+
+    try {
+      return JSON.parse(usuarioData) as ApiLoginResponse["usuario"];
+    } catch (error) {
+      console.warn("⚠️ Não foi possível parsear o usuário salvo:", error);
+      return null;
+    }
   }
 
   /**
@@ -196,6 +247,17 @@ export class AuthService {
   static async testApiEndpoints(): Promise<void> {
     console.log("🧪 Testando API...");
 
+    const logAxiosError = (context: string, err: unknown) => {
+      if (isAxiosError(err)) {
+        console.error(context, err.response?.status, err.message);
+        if (err.response?.data) {
+          console.log("📋 Response data:", err.response.data);
+        }
+      } else {
+        console.error(context, err);
+      }
+    };
+
     try {
       // Teste básico sem autenticação
       const response = await api.get("/categorias");
@@ -204,12 +266,8 @@ export class AuthService {
         response.data.length,
         "categorias"
       );
-    } catch (error: any) {
-      console.error(
-        "❌ Erro na API (sem auth):",
-        error.response?.status,
-        error.message
-      );
+    } catch (error: unknown) {
+      logAxiosError("❌ Erro na API (sem auth):", error);
     }
 
     // Teste com credenciais do admin
@@ -264,10 +322,11 @@ export class AuthService {
           "📊 Transações do admin:",
           transacoesAdminResponse.data.length
         );
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const status = isAxiosError(error) ? error.response?.status : undefined;
         console.log(
           "⚠️ Transações do admin não encontradas:",
-          error.response?.status
+          status ?? "status desconhecido"
         );
       }
 
@@ -293,10 +352,11 @@ export class AuthService {
           "📋 Primeiras 3 transações do usuário:",
           transacoesUsuarioResponse.data.slice(0, 3)
         );
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const status = isAxiosError(error) ? error.response?.status : undefined;
         console.log(
           "⚠️ Transações do usuário principal não encontradas:",
-          error.response?.status
+          status ?? "status desconhecido"
         );
       }
 
@@ -304,13 +364,8 @@ export class AuthService {
       console.log("🧪 Testando login admin...");
       const loginResult = await this.login("admin@financeiro.com", "admin123");
       console.log("✅ Login admin funcionou:", loginResult.user.nome);
-    } catch (error: any) {
-      console.error(
-        "❌ Erro no teste admin:",
-        error.response?.status,
-        error.message
-      );
-      console.log("📋 Response data:", error.response?.data);
+    } catch (error: unknown) {
+      logAxiosError("❌ Erro no teste admin:", error);
     }
   }
 

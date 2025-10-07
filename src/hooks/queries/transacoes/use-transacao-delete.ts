@@ -10,7 +10,6 @@ export function useTransacaoDelete() {
   return useMutation({
     mutationFn: (id: string) => transacaoService.delete(id),
     onSuccess: () => {
-
       // Invalida todas as queries de transações-list
       queryClient.invalidateQueries({
         predicate: (query) => {
@@ -24,6 +23,14 @@ export function useTransacaoDelete() {
         predicate: (query) => {
           const queryKey = query.queryKey;
           return Array.isArray(queryKey) && queryKey[0] === "resumo-financeiro";
+        },
+      });
+
+      // Invalida dados de tendência do gráfico
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = query.queryKey;
+          return Array.isArray(queryKey) && queryKey[0] === "transacoes-trend";
         },
       });
     },

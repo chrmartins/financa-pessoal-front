@@ -1,73 +1,74 @@
-# React + TypeScript + Vite
+# 💰 Finança Pessoal – Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicação web para controle financeiro pessoal. Permite acompanhar o resumo financeiro do mês, cadastrar transações, gerenciar categorias e administrar usuários (perfis ADMIN).
 
-Currently, two official plugins are available:
+Este projeto consome a API disponível em `https://financa-pessoal-production.up.railway.app/api` e foi construído com React, TypeScript e Vite.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ⚙️ Stack principal
 
-## React Compiler
+- React 19 + TypeScript
+- Vite 7
+- React Router DOM
+- React Hook Form + Zod
+- TanStack Query (React Query)
+- Zustand
+- Tailwind CSS + Radix UI
+- Axios com interceptors JWT
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🚀 Executando localmente
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm install   # ou npm install / yarn
+pnpm run dev   # inicia o servidor Vite em http://localhost:5173
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Variáveis de ambiente
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+O frontend já está configurado para apontar para o backend hospedado na Railway. Caso precise alterar:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+VITE_API_URL=https://financa-pessoal-production.up.railway.app/api
 ```
+
+Crie um arquivo `.env` na raiz caso deseje sobrescrever o valor padrão do `AuthService`.
+
+## 🔐 Credenciais de teste
+
+| Ambiente                   | E-mail               | Senha    |
+| -------------------------- | -------------------- | -------- |
+| Produção                   | admin@financeiro.com | teste123 |
+| Dev API local (porta 8080) | admin@financeiro.com | admin123 |
+
+> **Importante:** a API retorna HTTP 403 quando a senha não confere ou o usuário está inativo. Utilize as credenciais acima para evitar o erro "Acesso negado".
+
+## 🧭 Funcionalidades principais
+
+- Dashboard com resumo de receitas, despesas e tendência mensal
+- Listagem, criação, edição e remoção de transações
+- Gestão de categorias
+- Sessão autenticada com JWT (access + refresh token)
+- Administração de usuários (requer papel `ADMIN`)
+
+## 🧪 Testes manuais sugeridos
+
+1. **Login**: acessar `/login`, informar `admin@financeiro.com` e `teste123`.
+2. **Transações**: criar uma nova transação de receita e outra de despesa; verificar atualização do resumo.
+3. **Categorias**: adicionar uma nova categoria e utilizá-la em uma transação.
+4. **Usuários (ADMIN)**: criar um novo usuário, editar o papel e desativá-lo.
+5. **Refresh Token**: após login, limpar o token no localStorage para validar a renovação automática.
+
+## 🗂️ Estrutura
+
+```
+src/
+  components/
+  hooks/
+  pages/
+  services/
+  stores/
+  utils/
+```
+
+## 📄 Licença
+
+Projeto de uso interno. Consulte as diretrizes da equipe antes de redistribuir.

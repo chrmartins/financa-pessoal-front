@@ -72,7 +72,10 @@ api.interceptors.response.use(
 
     // Log detalhado do erro
     if (error.response) {
-      if (error.response?.status === 401 && !originalRequest._retry) {
+      const status = error.response?.status;
+
+      // Trata 401 (Unauthorized) como token expirado
+      if (status === 401 && !originalRequest._retry) {
         console.error("🚫 Erro 401: Token expirado ou inválido");
 
         // Marca que já tentou renovar para evitar loop infinito
@@ -99,6 +102,7 @@ api.interceptors.response.use(
           localStorage.removeItem("token");
           localStorage.removeItem("refreshToken");
           localStorage.removeItem("usuario");
+          localStorage.removeItem("user-store");
 
           // Redireciona para login
           if (typeof window !== "undefined") {
@@ -107,6 +111,13 @@ api.interceptors.response.use(
 
           return Promise.reject(refreshError);
         }
+      }
+
+      if (status === 403) {
+        console.warn(
+          "🚫 Erro 403: Acesso negado. Verifique permissões do usuário."
+        );
+        return Promise.reject(error);
       }
 
       // Em desenvolvimento, mostrar informações úteis
