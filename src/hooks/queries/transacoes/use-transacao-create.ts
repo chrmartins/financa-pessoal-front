@@ -19,14 +19,9 @@ export function useTransacaoCreate(options?: UseTransacaoCreateOptions) {
 
   return useMutation({
     mutationFn: (data: CreateTransacaoRequest) => {
-      console.log("🎯 HOOK - useTransacaoCreate chamado com:", data);
       return transacaoService.create(data);
     },
     onSuccess: async (data) => {
-      console.log("✅ HOOK - Transação criada:", data);
-      console.log(
-        "🔧 WORKAROUND - Atualizando cache local (backend retorna lista vazia)"
-      );
 
       // WORKAROUND: Atualizar cache manualmente já que backend retorna lista vazia
       // Adicionar a nova transação no cache de todas as queries de lista
@@ -34,7 +29,6 @@ export function useTransacaoCreate(options?: UseTransacaoCreateOptions) {
         { queryKey: ["transacoes-list"], exact: false },
         (oldData) => {
           if (!oldData) {
-            console.log("📝 Cache vazio, criando novo com a transação");
             return {
               content: [data],
               totalElements: 1,
@@ -44,9 +38,6 @@ export function useTransacaoCreate(options?: UseTransacaoCreateOptions) {
             };
           }
 
-          console.log(
-            `📝 Adicionando ao cache existente (${oldData.content.length} items)`
-          );
           // Adicionar no início do array (mais recente primeiro)
           return {
             ...oldData,
@@ -55,8 +46,6 @@ export function useTransacaoCreate(options?: UseTransacaoCreateOptions) {
           };
         }
       );
-
-      console.log("✅ WORKAROUND - Cache local atualizado com a transação");
 
       // NÃO invalidar transacoes-list para manter cache local
       // Quando backend for corrigido, remover o workaround acima e descomentar linha abaixo:
@@ -71,23 +60,17 @@ export function useTransacaoCreate(options?: UseTransacaoCreateOptions) {
         queryKey: ["resumo-financeiro"],
         exact: false,
       });
-      console.log("♻️ HOOK - Query 'resumo-financeiro' atualizada");
 
       // Invalidar dados de tendência do gráfico
       await queryClient.invalidateQueries({
         queryKey: ["transacoes-trend"],
         exact: false,
       });
-      console.log(
-        "♻️ HOOK - Query 'transacoes-trend' invalidada (gráfico será atualizado)"
-      );
 
       // Chamar callback opcional se fornecido
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      console.error("❌ HOOK - Erro ao criar transação:", error);
-      // Chamar callback opcional se fornecido
       options?.onError?.(error);
     },
   });

@@ -41,14 +41,6 @@ export function Dashboard() {
     dataFim,
   });
 
-  // DEBUG: Log quando dados mudarem
-  console.log("📊 DASHBOARD - Dados atualizados:", {
-    totalTransacoes: transacoesRecentes?.content?.length || 0,
-    loadingRecentes,
-    loadingResumo,
-    resumo: resumoFinanceiro,
-  });
-
   const isLoading = loadingRecentes || loadingResumo;
 
   if (error) {

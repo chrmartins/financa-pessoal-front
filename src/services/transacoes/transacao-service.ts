@@ -179,13 +179,6 @@ export const transacaoService = {
     // Obter ID do usuário autenticado
     const usuarioId = getAuthenticatedUserId();
 
-    console.log("🚀 CRIANDO TRANSAÇÃO:");
-    console.log(
-      "📍 URL:",
-      `${api.defaults.baseURL}/transacoes?usuarioId=${usuarioId}`
-    );
-    console.log("📦 Dados:", JSON.stringify(data, null, 2));
-
     try {
       const response: AxiosResponse<TransacaoResponse> = await api.post(
         "/transacoes",
@@ -195,7 +188,6 @@ export const transacaoService = {
         }
       );
 
-      console.log("✅ TRANSAÇÃO CRIADA COM SUCESSO:", response.data);
       return response.data;
     } catch (error: unknown) {
       console.error("❌ SERVICE - Erro ao criar transação:", error);
@@ -319,9 +311,6 @@ export const transacaoService = {
       economias: isNaN(economias) ? 0 : economias,
       totalTransacoes: isNaN(totalTransacoes) ? 0 : totalTransacoes,
     };
-
-    console.log("📊 RESUMO FINANCEIRO - Resposta do backend:", resumoBruto);
-    console.log("📊 RESUMO NORMALIZADO:", resumoNormalizado);
 
     return resumoNormalizado;
   },

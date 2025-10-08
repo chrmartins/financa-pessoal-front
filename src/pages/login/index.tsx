@@ -64,10 +64,6 @@ export const Login = () => {
     },
   });
 
-  // DEBUG: Log do estado de autenticação
-  console.log("🔍 LOGIN RENDER - isAuthenticated:", isAuthenticated);
-  console.log("🔍 LOGIN RENDER - location.pathname:", location.pathname);
-
   // Monitorar mudanças no isAuthenticated e redirecionar automaticamente
   const destination = useMemo(
     () => locationState?.from?.pathname ?? "/dashboard",
@@ -76,10 +72,6 @@ export const Login = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      console.log(
-        "🔄 useEffect - Detectou isAuthenticated=true, redirecionando para:",
-        destination
-      );
       // Pequeno delay para garantir que o estado foi persistido
       setTimeout(() => {
         navigate(destination, { replace: true });
@@ -89,40 +81,19 @@ export const Login = () => {
 
   // Se já está autenticado, redireciona (APÓS todos os hooks)
   if (isAuthenticated) {
-    console.log(
-      "✅ LOGIN - REDIRECIONANDO! isAuthenticated=true, destino:",
-      destination
-    );
     return <Navigate to={destination} replace />;
   }
 
   const onSubmit = async (data: LoginFormData) => {
-    console.log("🚀 LOGIN SUBMIT - Iniciando...");
-    console.log("📧 LOGIN SUBMIT - Email:", data.email);
-
     setIsLoading(true);
     setLoginError(null);
 
     try {
-      console.log("📞 LOGIN SUBMIT - Chamando login()...");
       await login(data.email, data.password);
 
-      console.log("✅ LOGIN SUBMIT - login() completou com sucesso!");
-
-      // Verificar estado após login
-      const currentState = useUserStore.getState();
-      console.log("🔍 LOGIN SUBMIT - Estado após login:", {
-        isAuthenticated: currentState.isAuthenticated,
-        user: currentState.user?.nome,
-        hasToken: !!currentState.token,
-      });
-
       // Redirecionamento manual após login bem-sucedido
-      console.log("🚀 LOGIN SUBMIT - Navegando para:", destination);
       navigate(destination, { replace: true });
     } catch (error: unknown) {
-      console.error("❌ LOGIN SUBMIT - Erro no login:", error);
-
       const message = isAxiosError(error)
         ? error.response?.data?.message || error.message
         : error instanceof Error

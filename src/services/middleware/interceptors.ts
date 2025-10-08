@@ -23,8 +23,7 @@ export const testConnection = async (): Promise<boolean> => {
 
     // Tenta um endpoint alternativo se /test não existir
     try {
-      const response = await api.get("/", { timeout: 5000 });
-      console.log("🟡 API root endpoint accessible:", response.status);
+      await api.get("/", { timeout: 5000 });
       return true;
     } catch (rootError) {
       console.error("🔴 API completely unreachable:", rootError);
@@ -40,15 +39,8 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
 
-    console.log("🚀 Requisição para:", config.url);
-    console.log("🔑 Token disponível:", !!token);
-
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log(
-        "🔑 JWT Bearer adicionado à requisição:",
-        `Bearer ${token.substring(0, 20)}...`
-      );
     } else {
       console.warn("⚠️ Nenhum token encontrado para autenticação");
     }
@@ -82,16 +74,12 @@ api.interceptors.response.use(
         originalRequest._retry = true;
 
         try {
-          console.log("� Tentando renovar token...");
-
           // Importação dinâmica para evitar dependência circular
           const { AuthService } = await import("../auth/auth-service");
           const { token } = await AuthService.refreshToken();
 
           // Atualiza o header da requisição original com novo token
           originalRequest.headers.Authorization = `Bearer ${token}`;
-
-          console.log("✅ Token renovado, refazendo requisição original");
 
           // Refaz a requisição original com novo token
           return api(originalRequest);
@@ -122,10 +110,10 @@ api.interceptors.response.use(
 
       // Em desenvolvimento, mostrar informações úteis
       if (import.meta.env.DEV) {
-        console.log(
+        console.info(
           "🔧 Dica: Verifique se o token está sendo enviado corretamente"
         );
-        console.log("🔧 Token atual:", localStorage.getItem("token"));
+        console.info("🔧 Token atual:", localStorage.getItem("token"));
       }
 
       return Promise.reject(error);

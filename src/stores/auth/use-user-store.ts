@@ -36,23 +36,12 @@ export const useUserStore = create<UserState>()(
 
         setUser: (user) => {
           const isAuthenticated = !!user;
-          console.log("👤 STORE setUser - Atualizando usuário:", {
-            user: user?.nome,
-            isAuthenticated,
-          });
           set({ user, isAuthenticated }, false, "setUser");
-
-          // Verificar se foi persistido
-          setTimeout(() => {
-            const stored = localStorage.getItem("user-store");
-            console.log("💾 STORE setUser - Dados persistidos:", stored);
-          }, 100);
         },
 
         setToken: (token) => {
           set({ token }, false, "setToken");
           // Token JWT agora é gerenciado diretamente pelo AuthService no localStorage
-          console.log("� Token atualizado no estado");
         },
 
         setLoading: (isLoading) => set({ isLoading }, false, "setLoading"),
@@ -61,32 +50,16 @@ export const useUserStore = create<UserState>()(
         login: async (email: string, password: string) => {
           const { setUser, setToken, setLoading } = get();
 
-          console.log("🏪 STORE - Iniciando login...");
           setLoading(true);
           try {
-            console.log("📞 STORE - Chamando AuthService.login...");
             const response: LoginResponse = await AuthService.login(
               email,
               password
             );
 
-            console.log("📥 STORE - Resposta recebida:", response);
-            console.log("👤 STORE - Setando usuário:", response.user.nome);
             setUser(response.user);
 
-            console.log("🔑 STORE - Setando token");
             setToken(response.token);
-
-            console.log("✅ STORE - Login realizado com sucesso");
-            console.log("🔑 STORE - JWT Token armazenado");
-
-            // Verificar estado final
-            const finalState = get();
-            console.log("🔍 STORE - Estado final:", {
-              isAuthenticated: finalState.isAuthenticated,
-              user: finalState.user?.nome,
-              hasToken: !!finalState.token,
-            });
           } catch (error) {
             console.error("❌ STORE - Erro no login:", error);
             throw error;
@@ -102,7 +75,6 @@ export const useUserStore = create<UserState>()(
           setLoading(true);
           try {
             await AuthService.logout();
-            console.log("👋 Logout realizado com sucesso");
           } catch (error) {
             console.warn("⚠️ Erro no logout:", error);
           } finally {
@@ -121,16 +93,9 @@ export const useUserStore = create<UserState>()(
           const usuarioData = localStorage.getItem("usuario");
           const { setLoading, setUser, setToken } = get();
 
-          console.log("🔍 validateToken - Verificando localStorage...");
-          console.log("🔍 validateToken - Token existe:", !!token);
-          console.log("🔍 validateToken - Usuario existe:", !!usuarioData);
-
           setLoading(true);
 
           if (!token || !usuarioData) {
-            console.log(
-              "🚫 validateToken - Nenhum token ou usuário encontrado"
-            );
             set(
               {
                 user: null,
@@ -152,7 +117,6 @@ export const useUserStore = create<UserState>()(
             // (a validação acontecerá na primeira requisição protegida)
             setUser(user);
             setToken(token);
-            console.log("✅ validateToken - Estado restaurado do localStorage");
           } catch (error: unknown) {
             console.error("❌ validateToken - Erro ao parsear usuário:", error);
             set(
@@ -188,7 +152,6 @@ export const useUserStore = create<UserState>()(
 // if (typeof window !== "undefined") {
 //   setTimeout(() => {
 //     const store = useUserStore.getState();
-//     console.log("🚀 Inicializando verificação de autenticação...");
 //     store.validateToken();
 //   }, 100);
 // }

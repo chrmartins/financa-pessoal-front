@@ -49,33 +49,20 @@ export class AuthService {
    */
   static async login(email: string, password: string): Promise<LoginResponse> {
     try {
-      console.log("🔐 AUTH SERVICE - Tentativa de login para:", email);
-      console.log("🌐 AUTH SERVICE - URL da API:", api.defaults.baseURL);
-
       // Chamada ao novo endpoint de autenticação
       const { data } = await api.post<ApiLoginResponse>("/auth", {
         email,
         senha: password,
       });
 
-      console.log("📦 AUTH SERVICE - Resposta recebida:", data);
-
       if (!data?.usuario || !data?.token || !data?.refreshToken) {
-        console.error("❌ AUTH SERVICE - Resposta de login inválida");
         throw new Error("Resposta de login inválida. Tente novamente.");
       }
-
-      console.log("👤 AUTH SERVICE - Usuário autenticado:", data.usuario.nome);
-      console.log("🔑 AUTH SERVICE - Token JWT recebido");
-      console.log("⏰ AUTH SERVICE - Expira em:", data.expiresIn, "ms");
 
       // Armazenar tokens
       localStorage.setItem("token", data.token);
       localStorage.setItem("refreshToken", data.refreshToken);
       localStorage.setItem("usuario", JSON.stringify(data.usuario));
-
-      console.log("💾 AUTH SERVICE - Dados salvos no localStorage");
-      console.log("🎉 AUTH SERVICE - Login realizado com sucesso!");
 
       return {
         user: data.usuario,
@@ -84,8 +71,6 @@ export class AuthService {
         expiresIn: data.expiresIn,
       };
     } catch (error: unknown) {
-      console.error("❌ Erro no login:", error);
-
       if (isAxiosError(error)) {
         const status = error.response?.status;
 
@@ -150,8 +135,6 @@ export class AuthService {
     }
 
     try {
-      console.log("🔄 Renovando token...");
-
       const { data } = await api.post<ApiLoginResponse>("/auth/refresh", {
         refreshToken,
       });
@@ -160,8 +143,6 @@ export class AuthService {
         console.error("❌ Resposta de refresh inválida");
         throw new Error("Falha ao renovar token");
       }
-
-      console.log("✅ Token renovado com sucesso");
 
       // Atualizar tokens armazenados
       localStorage.setItem("token", data.token);
@@ -196,11 +177,9 @@ export class AuthService {
    * Fazer logout
    */
   static async logout(): Promise<void> {
-    console.log("🚪 Fazendo logout...");
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("usuario");
-    console.log("✅ Logout realizado");
   }
 
   /**
@@ -245,125 +224,61 @@ export class AuthService {
    * Método de teste para API
    */
   static async testApiEndpoints(): Promise<void> {
-    console.log("🧪 Testando API...");
-
     const logAxiosError = (context: string, err: unknown) => {
       if (isAxiosError(err)) {
         console.error(context, err.response?.status, err.message);
-        if (err.response?.data) {
-          console.log("📋 Response data:", err.response.data);
-        }
       } else {
         console.error(context, err);
       }
     };
 
     try {
-      // Teste básico sem autenticação
-      const response = await api.get("/categorias");
-      console.log(
-        "✅ API funcionando (sem auth):",
-        response.data.length,
-        "categorias"
-      );
+      await api.get("/categorias");
     } catch (error: unknown) {
       logAxiosError("❌ Erro na API (sem auth):", error);
     }
 
-    // Teste com credenciais do admin
-    console.log("🧪 Testando com credenciais admin...");
     try {
       const adminCredentials = btoa("admin@financeiro.com:admin123");
+      const headers = {
+        Authorization: `Basic ${adminCredentials}`,
+        "Content-Type": "application/json",
+      } as const;
 
-      // Testar usuário específico
-      const userResponse = await api.get(
-        "/usuarios/550e8400-e29b-41d4-a716-446655440003",
-        {
-          headers: {
-            Authorization: `Basic ${adminCredentials}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      console.log("✅ Usuário admin encontrado:", userResponse.data);
-
-      // Testar todas as transações
-      console.log("🧪 Testando endpoint /transacoes...");
-      const transacoesResponse = await api.get("/transacoes", {
-        headers: {
-          Authorization: `Basic ${adminCredentials}`,
-          "Content-Type": "application/json",
-        },
+      await api.get("/usuarios/550e8400-e29b-41d4-a716-446655440003", {
+        headers,
       });
-      console.log(
-        "📊 Total de transações na API:",
-        transacoesResponse.data.length
-      );
-      console.log(
-        "📋 Primeiras 3 transações:",
-        transacoesResponse.data.slice(0, 3)
-      );
 
-      // Testar transações específicas do usuário admin
+      await api.get("/transacoes", {
+        headers,
+      });
+
       try {
-        console.log(
-          "🧪 Testando transações do usuário admin (550e8400-e29b-41d4-a716-446655440003)..."
-        );
-        const transacoesAdminResponse = await api.get(
+        await api.get(
           "/transacoes/usuario/550e8400-e29b-41d4-a716-446655440003",
           {
-            headers: {
-              Authorization: `Basic ${adminCredentials}`,
-              "Content-Type": "application/json",
-            },
+            headers,
           }
         );
-        console.log(
-          "📊 Transações do admin:",
-          transacoesAdminResponse.data.length
-        );
       } catch (error: unknown) {
-        const status = isAxiosError(error) ? error.response?.status : undefined;
-        console.log(
-          "⚠️ Transações do admin não encontradas:",
-          status ?? "status desconhecido"
-        );
+        logAxiosError("⚠️ Erro ao consultar transações do admin:", error);
       }
 
-      // Testar transações do usuário que tem dados no banco
       try {
-        console.log(
-          "🧪 Testando transações do usuário principal (550e8400-e29b-41d4-a716-446655440001)..."
-        );
-        const transacoesUsuarioResponse = await api.get(
+        await api.get(
           "/transacoes/usuario/550e8400-e29b-41d4-a716-446655440001",
           {
-            headers: {
-              Authorization: `Basic ${adminCredentials}`,
-              "Content-Type": "application/json",
-            },
+            headers,
           }
         );
-        console.log(
-          "📊 Transações do usuário principal:",
-          transacoesUsuarioResponse.data.length
-        );
-        console.log(
-          "📋 Primeiras 3 transações do usuário:",
-          transacoesUsuarioResponse.data.slice(0, 3)
-        );
       } catch (error: unknown) {
-        const status = isAxiosError(error) ? error.response?.status : undefined;
-        console.log(
-          "⚠️ Transações do usuário principal não encontradas:",
-          status ?? "status desconhecido"
+        logAxiosError(
+          "⚠️ Erro ao consultar transações do usuário principal:",
+          error
         );
       }
 
-      // Testar login com essas credenciais
-      console.log("🧪 Testando login admin...");
-      const loginResult = await this.login("admin@financeiro.com", "admin123");
-      console.log("✅ Login admin funcionou:", loginResult.user.nome);
+      await this.login("admin@financeiro.com", "admin123");
     } catch (error: unknown) {
       logAxiosError("❌ Erro no teste admin:", error);
     }

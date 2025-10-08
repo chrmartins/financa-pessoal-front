@@ -76,7 +76,6 @@ export function TransacaoModal({
   useEffect(() => {
     if (isSuccess && !successHandledRef.current) {
       successHandledRef.current = true;
-      console.log("✅ MODAL - Transação criada com sucesso, fechando modal...");
       toast.success(
         isEditing
           ? "Transação atualizada com sucesso!"
@@ -85,7 +84,6 @@ export function TransacaoModal({
 
       // Pequeno delay para garantir que as queries foram invalidadas
       setTimeout(() => {
-        console.log("🚪 MODAL - Fechando modal após delay...");
         resetMutation(); // Resetar mutation antes de fechar
         successHandledRef.current = false;
         onClose();
@@ -162,10 +160,8 @@ export function TransacaoModal({
   };
 
   const handleSubmit = onSubmit((data: FormData) => {
-    console.log("📝 MODAL - Formulário submetido:", data);
 
     const valorNumerico = parseCurrencyInput(data.valorFormatado);
-    console.log("💰 MODAL - Valor parseado:", valorNumerico);
 
     if (!data.categoriaId) {
       toast.error("Por favor, selecione uma categoria");
@@ -192,7 +188,6 @@ export function TransacaoModal({
         : undefined,
     };
 
-    console.log("📤 MODAL - Chamando createTransacao com:", requestData);
     createTransacao(requestData);
   });
 
