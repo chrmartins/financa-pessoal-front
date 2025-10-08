@@ -24,13 +24,31 @@ pnpm run dev   # inicia o servidor Vite em http://localhost:5173
 
 ### Variáveis de ambiente
 
-O frontend já está configurado para apontar para o backend hospedado na Railway. Caso precise alterar:
+O frontend já está configurado para apontar para o backend hospedado na Railway. Para customizar o endpoint, copie o arquivo `.env.example` para `.env` e ajuste o valor:
 
 ```bash
-VITE_API_URL=https://financa-pessoal-production.up.railway.app/api
+VITE_API_URL=https://sua-api.com/api
 ```
 
-Crie um arquivo `.env` na raiz caso deseje sobrescrever o valor padrão do `AuthService`.
+> **Dica:** Sempre informe a URL base completa (incluindo `/api`).
+
+## 🚢 Deploy na Vercel
+
+1. Faça fork ou conecte este repositório na Vercel.
+2. Em **Settings → Environment Variables**, adicione:
+
+- **Name:** `VITE_API_URL`
+- **Value:** `https://financa-pessoal-production.up.railway.app/api` (ou a URL do backend que estiver usando)
+- **Environment:** marque `Preview` e `Production`.
+
+3. Configure o build com:
+
+- **Framework Preset:** `Vite`
+- **Build Command:** `npm run build`
+- **Install Command:** `npm install`
+- **Output Directory:** `dist`
+
+4. Clique em **Deploy**. A cada push na branch principal, a Vercel fará o deploy automaticamente usando as mesmas variáveis.
 
 ## 🔐 Credenciais de teste
 
