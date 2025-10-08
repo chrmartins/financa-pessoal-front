@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { formatCurrency } from "@/utils";
-import { Calendar, DollarSign, TrendingDown, TrendingUp } from "lucide-react";
+import { DollarSign, TrendingDown, TrendingUp } from "lucide-react";
 
 interface SummaryData {
   saldo: number;
@@ -28,8 +28,8 @@ function formatPercentage(value?: number): string {
 export function SummaryCards({ data, isLoading }: SummaryCardsProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[1, 2, 3, 4].map((index) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[1, 2, 3].map((index) => (
           <Card
             key={index}
             className="card-gradient dark:bg-gray-800/95 dark:border-gray-700/50 animate-pulse"
@@ -52,7 +52,7 @@ export function SummaryCards({ data, isLoading }: SummaryCardsProps) {
 
   if (!data) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card className="card-gradient dark:bg-gray-800/95 dark:border-gray-700/50">
           <CardContent className="flex items-center justify-center py-8">
             <p className="text-muted-foreground">Nenhum dado disponível</p>
@@ -74,7 +74,7 @@ export function SummaryCards({ data, isLoading }: SummaryCardsProps) {
       : "text-red-600 dark:text-red-400";
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       <Card className="card-gradient dark:bg-gray-800/95 dark:border-gray-700/50">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -127,25 +127,6 @@ export function SummaryCards({ data, isLoading }: SummaryCardsProps) {
           {data.despesasComparacao !== undefined && (
             <p className="text-xs text-gray-600 dark:text-gray-400">
               {formatPercentage(data.despesasComparacao)}
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="card-gradient dark:bg-gray-800/95 dark:border-gray-700/50">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Economia
-          </CardTitle>
-          <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-            {formatCurrency(data.economias)}
-          </div>
-          {data.economiasComparacao !== undefined && (
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              {formatPercentage(data.economiasComparacao)}
             </p>
           )}
         </CardContent>

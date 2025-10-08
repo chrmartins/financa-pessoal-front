@@ -26,13 +26,16 @@ export interface UpdateUsuarioRequest {
 }
 
 export interface Categoria {
-  id: number;
+  id: string;
   nome: string;
   descricao?: string;
-  cor: string;
-  usuarioId: number;
-  createdAt: string;
-  updatedAt: string;
+  tipo: "RECEITA" | "DESPESA";
+  cor?: string;
+  icone?: string;
+  ativa: boolean;
+  usuarioId: string;
+  dataCriacao: string;
+  dataAtualizacao?: string | null;
 }
 
 export interface Transacao {
@@ -52,13 +55,19 @@ export interface Transacao {
 export interface CreateCategoriaRequest {
   nome: string;
   descricao?: string;
-  cor: string;
+  tipo: "RECEITA" | "DESPESA";
+  cor?: string;
+  icone?: string;
+  ativa?: boolean;
 }
 
 export interface UpdateCategoriaRequest {
   nome?: string;
   descricao?: string;
+  tipo?: "RECEITA" | "DESPESA";
   cor?: string;
+  icone?: string;
+  ativa?: boolean;
 }
 
 export interface CreateTransacaoRequest {
@@ -88,11 +97,14 @@ export interface UpdateTransacaoRequest {
 
 // Tipos para resposta da API
 export interface CategoriaResponse {
-  id: string; // UUID string como no banco real
+  id: string;
   nome: string;
   descricao?: string;
   tipo: "RECEITA" | "DESPESA";
+  cor?: string;
+  icone?: string;
   ativa: boolean;
+  usuarioId: string;
   dataCriacao: string;
   dataAtualizacao?: string;
 }

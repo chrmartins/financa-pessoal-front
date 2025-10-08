@@ -21,6 +21,11 @@ const Transacoes = lazy(() =>
     default: module.Transacoes,
   }))
 );
+const Categorias = lazy(() =>
+  import("@/pages/categorias").then((module) => ({
+    default: module.CategoriasPage,
+  }))
+);
 const Usuarios = lazy(() => import("@/pages/usuarios"));
 
 // Configuração do React Query
@@ -72,7 +77,9 @@ function App() {
                   <Layout>
                     <Routes>
                       <Route path="/" element={<Dashboard />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
                       <Route path="/transacoes" element={<Transacoes />} />
+                      <Route path="/categorias" element={<Categorias />} />
                       <Route path="/usuarios" element={<Usuarios />} />
                     </Routes>
                   </Layout>

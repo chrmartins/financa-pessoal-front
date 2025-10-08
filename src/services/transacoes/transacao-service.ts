@@ -63,34 +63,43 @@ export const transacaoService = {
       throw new Error("Usuário não autenticado. Faça login para continuar.");
     }
 
-    const searchParams = new URLSearchParams();
+    const queryParams: Record<string, string> = {
+      usuarioId: user.id,
+    };
 
-    // Adicionar apenas os parâmetros aceitos pelo backend
     if (params) {
-      // Backend aceita apenas dataInicio e dataFim, ignorar page/size
-      const { dataInicio, dataFim } = params;
+      const { dataInicio, dataFim, tipo, categoriaId, descricao } = params;
 
-      // Garantir formato ISO (YYYY-MM-DD) para as datas
-      if (
-        dataInicio !== undefined &&
-        dataInicio !== null &&
-        dataInicio !== ""
-      ) {
-        const dataInicioFormatted = new Date(dataInicio)
+      if (dataInicio) {
+        queryParams.dataInicio = new Date(dataInicio)
           .toISOString()
           .split("T")[0];
-        searchParams.append("dataInicio", dataInicioFormatted);
       }
-      if (dataFim !== undefined && dataFim !== null && dataFim !== "") {
-        const dataFimFormatted = new Date(dataFim).toISOString().split("T")[0];
-        searchParams.append("dataFim", dataFimFormatted);
+
+      if (dataFim) {
+        queryParams.dataFim = new Date(dataFim).toISOString().split("T")[0];
+      }
+
+      if (tipo) {
+        queryParams.tipo = tipo;
+      }
+
+      if (categoriaId) {
+        queryParams.categoriaId = categoriaId;
+      }
+
+      if (descricao) {
+        queryParams.descricao = descricao;
       }
     }
 
     try {
       // Todos os usuários (incluindo ADMIN) veem apenas suas próprias transações
       const response: AxiosResponse<TransacaoResponse[]> = await api.get(
-        `/transacoes/usuario/${user.id}?${searchParams.toString()}`
+        "/transacoes",
+        {
+          params: queryParams,
+        }
       );
 
       let allTransactions = response.data;
@@ -179,8 +188,11 @@ export const transacaoService = {
 
     try {
       const response: AxiosResponse<TransacaoResponse> = await api.post(
-        `/transacoes?usuarioId=${usuarioId}`,
-        data
+        "/transacoes",
+        data,
+        {
+          params: { usuarioId },
+        }
       );
 
       console.log("✅ TRANSAÇÃO CRIADA COM SUCESSO:", response.data);

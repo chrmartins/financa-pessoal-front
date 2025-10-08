@@ -70,7 +70,7 @@ export const Login = () => {
 
   // Monitorar mudanças no isAuthenticated e redirecionar automaticamente
   const destination = useMemo(
-    () => locationState?.from?.pathname ?? "/",
+    () => locationState?.from?.pathname ?? "/dashboard",
     [locationState]
   );
 
@@ -238,18 +238,6 @@ export const Login = () => {
               </Button>
             </form>
           </Form>
-
-          <div className="text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Não tem uma conta?{" "}
-              <Button
-                variant="link"
-                className="p-0 h-auto font-semibold text-blue-600"
-              >
-                Criar conta
-              </Button>
-            </p>
-          </div>
         </CardContent>
       </Card>
     </div>

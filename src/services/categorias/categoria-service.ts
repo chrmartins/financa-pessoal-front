@@ -1,3 +1,4 @@
+import { useUserStore } from "@/stores/auth/use-user-store";
 import type {
   CategoriaResponse,
   CreateCategoriaRequest,
@@ -5,6 +6,16 @@ import type {
 } from "@/types";
 import type { AxiosResponse } from "axios";
 import { api } from "../middleware/interceptors";
+
+const getAuthenticatedUserId = (): string => {
+  const { user } = useUserStore.getState();
+
+  if (!user?.id) {
+    throw new Error("Usuário não autenticado. Faça login para continuar.");
+  }
+
+  return user.id;
+};
 
 /**
  * Serviço para operações relacionadas a Categorias
@@ -14,8 +25,13 @@ export const categoriaService = {
    * Listar todas as categorias
    */
   list: async (): Promise<CategoriaResponse[]> => {
+    const usuarioId = getAuthenticatedUserId();
+
     const response: AxiosResponse<CategoriaResponse[]> = await api.get(
-      "/categorias"
+      "/categorias",
+      {
+        params: { usuarioId },
+      }
     );
     return response.data;
   },
@@ -23,9 +39,14 @@ export const categoriaService = {
   /**
    * Buscar categoria por ID
    */
-  getById: async (id: number): Promise<CategoriaResponse> => {
+  getById: async (id: string): Promise<CategoriaResponse> => {
+    const usuarioId = getAuthenticatedUserId();
+
     const response: AxiosResponse<CategoriaResponse> = await api.get(
-      `/categorias/${id}`
+      `/categorias/${id}`,
+      {
+        params: { usuarioId },
+      }
     );
     return response.data;
   },
@@ -34,9 +55,14 @@ export const categoriaService = {
    * Criar nova categoria
    */
   create: async (data: CreateCategoriaRequest): Promise<CategoriaResponse> => {
+    const usuarioId = getAuthenticatedUserId();
+
     const response: AxiosResponse<CategoriaResponse> = await api.post(
       "/categorias",
-      data
+      data,
+      {
+        params: { usuarioId },
+      }
     );
     return response.data;
   },
@@ -45,12 +71,17 @@ export const categoriaService = {
    * Atualizar categoria
    */
   update: async (
-    id: number,
+    id: string,
     data: UpdateCategoriaRequest
   ): Promise<CategoriaResponse> => {
+    const usuarioId = getAuthenticatedUserId();
+
     const response: AxiosResponse<CategoriaResponse> = await api.put(
       `/categorias/${id}`,
-      data
+      data,
+      {
+        params: { usuarioId },
+      }
     );
     return response.data;
   },
@@ -58,8 +89,12 @@ export const categoriaService = {
   /**
    * Deletar uma categoria
    */
-  delete: async (id: number): Promise<void> => {
-    await api.delete(`/categorias/${id}`);
+  delete: async (id: string): Promise<void> => {
+    const usuarioId = getAuthenticatedUserId();
+
+    await api.delete(`/categorias/${id}`, {
+      params: { usuarioId },
+    });
   },
 };
 
