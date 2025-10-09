@@ -33,12 +33,12 @@ export const categoriaService = {
         params: { usuarioId },
       }
     );
-    return response.data;
-  },
 
+    return response.data;
+  }
   /**
    * Buscar categoria por ID
-   */
+   */,
   getById: async (id: string): Promise<CategoriaResponse> => {
     const usuarioId = getAuthenticatedUserId();
 
@@ -64,12 +64,12 @@ export const categoriaService = {
         params: { usuarioId },
       }
     );
-    return response.data;
-  },
 
+    return response.data;
+  }
   /**
    * Atualizar categoria
-   */
+   */,
   update: async (
     id: string,
     data: UpdateCategoriaRequest

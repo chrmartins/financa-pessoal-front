@@ -29,7 +29,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import type { TransacaoModalProps } from "./interface";
-import { getCategoriaColor, getExemploTexto, opcoesQuantidade } from "./utils";
+import { getExemploTexto, opcoesQuantidade } from "./utils";
 import { formSchema, type FormData } from "./validations";
 
 export function TransacaoModal({
@@ -362,11 +362,14 @@ export function TransacaoModal({
               <SelectTrigger>
                 {categoriaSelecionada ? (
                   <div className="flex items-center gap-2">
-                    <div
-                      className={`w-3 h-3 rounded-full ${getCategoriaColor(
-                        categoriaSelecionada
-                      )}`}
-                    ></div>
+                    {categoriaSelecionada.cor && (
+                      <div
+                        className="w-3 h-3 rounded-full flex-shrink-0"
+                        style={{
+                          backgroundColor: categoriaSelecionada.cor,
+                        }}
+                      />
+                    )}
                     <span>{categoriaSelecionada.nome}</span>
                   </div>
                 ) : (
@@ -385,11 +388,14 @@ export function TransacaoModal({
                 {categoriasFiltradas.map((categoria) => (
                   <SelectItem key={categoria.id} value={categoria.id}>
                     <div className="flex items-center gap-2">
-                      <div
-                        className={`w-3 h-3 rounded-full ${getCategoriaColor(
-                          categoria
-                        )}`}
-                      ></div>
+                      {categoria.cor && (
+                        <div
+                          className="w-3 h-3 rounded-full flex-shrink-0"
+                          style={{
+                            backgroundColor: categoria.cor,
+                          }}
+                        />
+                      )}
                       <span>{categoria.nome}</span>
                     </div>
                   </SelectItem>
