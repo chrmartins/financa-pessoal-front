@@ -2,6 +2,7 @@ import {
   transacaoService,
   type TransacaoListResponse,
 } from "@/services/transacoes/transacao-service";
+import { useUserStore } from "@/stores/auth/use-user-store";
 import type { TransacaoResponse } from "@/types";
 import { calcularResumoFinanceiro } from "@/utils/financeiro";
 import { useQuery } from "@tanstack/react-query";
@@ -26,6 +27,7 @@ export function useTrendData(options?: { enabled?: boolean }): {
   isLoading: boolean;
   error: unknown;
 } {
+  const userId = useUserStore((state) => state.user?.id);
   const { enabled = true } = options || {};
 
   const months = useMemo(() => {
@@ -58,7 +60,12 @@ export function useTrendData(options?: { enabled?: boolean }): {
   }, [months]);
 
   const trendQuery = useQuery({
-    queryKey: ["transacoes-trend", overallRange.start, overallRange.end],
+    queryKey: [
+      "transacoes-trend",
+      userId,
+      overallRange.start,
+      overallRange.end,
+    ],
     queryFn: () =>
       transacaoService.list({
         page: 0,
@@ -66,7 +73,7 @@ export function useTrendData(options?: { enabled?: boolean }): {
         dataInicio: overallRange.start,
         dataFim: overallRange.end,
       }),
-    enabled,
+    enabled: enabled && !!userId,
     staleTime: 10 * 60 * 1000, // ✅ 10 minutos - tendências históricas mudam raramente
     gcTime: 30 * 60 * 1000, // ✅ 30 minutos - cache longo para dados históricos
     refetchOnWindowFocus: false, // ✅ Não refaz ao focar janela

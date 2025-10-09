@@ -1,4 +1,5 @@
 import { transacaoService } from "@/services/transacoes/transacao-service";
+import { useUserStore } from "@/stores/auth/use-user-store";
 import { useQuery } from "@tanstack/react-query";
 
 /**
@@ -19,15 +20,16 @@ export interface TransacoesParams {
 export function useTransacoesList(
   params?: TransacoesParams & { enabled?: boolean }
 ) {
+  const userId = useUserStore((state) => state.user?.id);
   const { enabled = true, ...queryParams } = params || {};
-  const queryKey = ["transacoes-list", queryParams];
+  const queryKey = ["transacoes-list", userId, queryParams];
 
   const result = useQuery({
     queryKey,
     queryFn: () => {
       return transacaoService.list(queryParams);
     },
-    enabled,
+    enabled: enabled && !!userId,
     staleTime: 5 * 60 * 1000, // 5 minutos - evita refetch desnecessário
     gcTime: 10 * 60 * 1000, // 10 minutos - mantém cache por mais tempo
     select: (data) => {

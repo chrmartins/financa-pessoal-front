@@ -1,4 +1,5 @@
 import { categoriaService } from "@/services/categorias/categoria-service";
+import { useUserStore } from "@/stores/auth/use-user-store";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 /**
@@ -6,11 +7,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
  */
 export function useCategoriaDelete() {
   const queryClient = useQueryClient();
+  const userId = useUserStore((state) => state.user?.id);
 
   return useMutation({
     mutationFn: (id: string) => categoriaService.delete(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categorias-list"] });
+      queryClient.invalidateQueries({ queryKey: ["categorias-list", userId] });
     },
   });
 }
