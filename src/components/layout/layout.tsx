@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useUserStore } from "@/stores/auth/use-user-store";
 import { useUIStore } from "@/stores/ui/use-ui-store";
 import { cn } from "@/utils";
-import { SpeedInsights } from '@vercel/speed-insights/next';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import {
   CreditCard,
   Home,
