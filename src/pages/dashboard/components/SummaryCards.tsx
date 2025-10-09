@@ -28,7 +28,7 @@ function formatPercentage(value?: number): string {
 export function SummaryCards({ data, isLoading }: SummaryCardsProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
         {[1, 2, 3].map((index) => (
           <Card
             key={index}
@@ -52,7 +52,7 @@ export function SummaryCards({ data, isLoading }: SummaryCardsProps) {
 
   if (!data) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
         <Card className="card-gradient dark:bg-gray-800/95 dark:border-gray-700/50">
           <CardContent className="flex items-center justify-center py-8">
             <p className="text-muted-foreground">Nenhum dado disponível</p>
@@ -74,20 +74,20 @@ export function SummaryCards({ data, isLoading }: SummaryCardsProps) {
       : "text-red-600 dark:text-red-400";
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
       <Card className="card-gradient dark:bg-gray-800/95 dark:border-gray-700/50">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+          <CardTitle className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
             Saldo do Mês
           </CardTitle>
-          <DollarSign className={`h-4 w-4 ${saldoIconColor}`} />
+          <DollarSign className={`h-3 w-3 sm:h-4 sm:w-4 ${saldoIconColor}`} />
         </CardHeader>
-        <CardContent>
-          <div className={`text-2xl font-bold ${saldoColor}`}>
+        <CardContent className="pt-1">
+          <div className={`text-lg sm:text-2xl font-bold ${saldoColor}`}>
             {formatCurrency(data.saldo)}
           </div>
           {data.saldoComparacao !== undefined && (
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+            <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mt-0.5">
               {formatPercentage(data.saldoComparacao)}
             </p>
           )}
@@ -95,37 +95,37 @@ export function SummaryCards({ data, isLoading }: SummaryCardsProps) {
       </Card>
 
       <Card className="card-gradient dark:bg-gray-800/95 dark:border-gray-700/50">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+          <CardTitle className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
             Receitas do Mês
           </CardTitle>
-          <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
+          <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 dark:text-green-400" />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+        <CardContent className="pt-1">
+          <div className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400">
             {formatCurrency(data.receitas)}
           </div>
           {data.receitasComparacao !== undefined && (
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+            <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mt-0.5">
               {formatPercentage(data.receitasComparacao)}
             </p>
           )}
         </CardContent>
       </Card>
 
-      <Card className="card-gradient dark:bg-gray-800/95 dark:border-gray-700/50">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-300">
+      <Card className="card-gradient dark:bg-gray-800/95 dark:border-gray-700/50 col-span-2 lg:col-span-1">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+          <CardTitle className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
             Despesas do Mês
           </CardTitle>
-          <TrendingDown className="h-4 w-4 text-red-600 dark:text-red-400" />
+          <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-600 dark:text-red-400" />
         </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+        <CardContent className="pt-1">
+          <div className="text-lg sm:text-2xl font-bold text-red-600 dark:text-red-400">
             {formatCurrency(data.despesas)}
           </div>
           {data.despesasComparacao !== undefined && (
-            <p className="text-xs text-gray-600 dark:text-gray-400">
+            <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 mt-0.5">
               {formatPercentage(data.despesasComparacao)}
             </p>
           )}
