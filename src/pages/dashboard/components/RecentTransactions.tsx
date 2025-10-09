@@ -59,17 +59,28 @@ export function RecentTransactions({
                 className="flex items-center justify-between p-2 bg-white/50 dark:bg-gray-700/50 rounded-md border border-white/20 dark:border-gray-600/30"
               >
                 <div className="flex items-center gap-2">
-                  <div
-                    className={`p-1.5 rounded-md ${
-                      transacao.tipo === "RECEITA"
-                        ? "bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400"
-                        : "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400"
-                    }`}
-                  >
-                    {transacao.tipo === "RECEITA" ? (
-                      <TrendingUp className="h-3 w-3" />
-                    ) : (
-                      <TrendingDown className="h-3 w-3" />
+                  <div className="flex flex-col items-center gap-1">
+                    <div
+                      className={`p-1.5 rounded-md ${
+                        transacao.tipo === "RECEITA"
+                          ? "bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400"
+                          : "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400"
+                      }`}
+                    >
+                      {transacao.tipo === "RECEITA" ? (
+                        <TrendingUp className="h-3 w-3" />
+                      ) : (
+                        <TrendingDown className="h-3 w-3" />
+                      )}
+                    </div>
+                    {transacao.categoria?.cor && (
+                      <div
+                        className="h-1.5 w-1.5 rounded-full"
+                        style={{
+                          backgroundColor: transacao.categoria.cor,
+                        }}
+                        title={transacao.categoria.nome}
+                      />
                     )}
                   </div>
                   <div>

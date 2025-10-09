@@ -97,7 +97,10 @@ export function CategoriaFormModal({
 
     try {
       if (isEdit && categoria) {
-        await updateMutation.mutateAsync({ id: categoria.id, data: payload });
+        await updateMutation.mutateAsync({
+          id: categoria.id,
+          data: payload,
+        });
         toast.success("Categoria atualizada com sucesso!");
       } else {
         await createMutation.mutateAsync(payload);

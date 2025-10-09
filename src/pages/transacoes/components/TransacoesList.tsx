@@ -82,17 +82,28 @@ export function TransacoesList({
                     className="flex items-center justify-between p-3 sm:p-4 md:p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors gap-2"
                   >
                     <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                      <div
-                        className={`p-2 rounded-lg flex-shrink-0 ${
-                          transacao.tipo === "RECEITA"
-                            ? "bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400"
-                            : "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400"
-                        }`}
-                      >
-                        {transacao.tipo === "RECEITA" ? (
-                          <TrendingUp className="h-4 w-4" />
-                        ) : (
-                          <TrendingDown className="h-4 w-4" />
+                      <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                        <div
+                          className={`p-2 rounded-lg ${
+                            transacao.tipo === "RECEITA"
+                              ? "bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400"
+                              : "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400"
+                          }`}
+                        >
+                          {transacao.tipo === "RECEITA" ? (
+                            <TrendingUp className="h-4 w-4" />
+                          ) : (
+                            <TrendingDown className="h-4 w-4" />
+                          )}
+                        </div>
+                        {transacao.categoria?.cor && (
+                          <div
+                            className="h-1.5 w-1.5 rounded-full"
+                            style={{
+                              backgroundColor: transacao.categoria.cor,
+                            }}
+                            title={transacao.categoria.nome}
+                          />
                         )}
                       </div>
                       <div className="min-w-0 flex-1">

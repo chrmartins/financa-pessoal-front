@@ -103,7 +103,7 @@ export function TransacaoModal({
     useCategoriasList();
 
   const categoriasFiltradas = categorias.filter(
-    (categoria) => categoria.tipo === tipo
+    (categoria) => categoria.tipo === tipo && categoria.ativa
   );
 
   useEffect(() => {
@@ -160,7 +160,6 @@ export function TransacaoModal({
   };
 
   const handleSubmit = onSubmit((data: FormData) => {
-
     const valorNumerico = parseCurrencyInput(data.valorFormatado);
 
     if (!data.categoriaId) {
