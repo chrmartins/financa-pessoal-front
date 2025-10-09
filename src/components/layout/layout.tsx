@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useUserStore } from "@/stores/auth/use-user-store";
 import { useUIStore } from "@/stores/ui/use-ui-store";
 import { cn } from "@/utils";
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import {
   CreditCard,
   Home,
@@ -319,6 +320,7 @@ export function Layout({ children }: LayoutProps) {
         {/* Page Content */}
         <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 transition-page">
           {children}
+          <SpeedInsights />
         </main>
       </div>
 
