@@ -50,7 +50,8 @@ export function CategoriasTable({
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="overflow-x-auto">
+        {/* Visualização Desktop - Tabela */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="min-w-full divide-y divide-border">
             <thead className="bg-muted/50">
               <tr>
@@ -158,6 +159,83 @@ export function CategoriasTable({
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Visualização Mobile - Cards */}
+        <div className="md:hidden divide-y divide-border">
+          {categorias.map((categoria) => (
+            <div
+              key={categoria.id}
+              className="p-3 hover:bg-muted/30 transition-colors"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 min-w-0 flex-1">
+                  <span
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border flex-shrink-0 mt-0.5"
+                    style={{
+                      backgroundColor: categoria.cor || undefined,
+                      borderColor: categoria.cor || undefined,
+                    }}
+                  >
+                    {!categoria.cor && (
+                      <span className="text-xs text-muted-foreground">?</span>
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {categoria.nome}
+                    </p>
+                    {categoria.descricao && (
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">
+                        {categoria.descricao}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                          categoria.tipo === "RECEITA"
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                            : "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                        }`}
+                      >
+                        {categoria.tipo === "RECEITA" ? "Receita" : "Despesa"}
+                      </span>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                          categoria.ativa
+                            ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
+                            : "bg-gray-200 text-gray-600 dark:bg-gray-700/60 dark:text-gray-300"
+                        }`}
+                      >
+                        {categoria.ativa ? "Ativa" : "Inativa"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Criada em {formatDate(categoria.dataCriacao)}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 text-muted-foreground hover:text-primary"
+                    onClick={() => onEdit(categoria)}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    onClick={() => onDelete(categoria)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>

@@ -50,8 +50,8 @@ export function Transacoes() {
   return (
     <div className="space-y-6">
       {/* Cabeçalho com seletor de mês */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
           {/* Seletor de mês */}
           <div className="flex items-center gap-2">
             <Button
@@ -95,7 +95,7 @@ export function Transacoes() {
         {/* Botão nova transação */}
         <Button
           onClick={() => setCreateModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
+          className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
         >
           <Plus className="h-4 w-4 mr-2" />
           Nova Transação

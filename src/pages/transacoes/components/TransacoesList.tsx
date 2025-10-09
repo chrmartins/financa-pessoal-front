@@ -79,11 +79,11 @@ export function TransacoesList({
                 {transacoes.map((transacao) => (
                   <div
                     key={transacao.id}
-                    className="flex items-center justify-between p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                    className="flex items-center justify-between p-3 sm:p-4 md:p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors gap-2"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                       <div
-                        className={`p-2 rounded-lg ${
+                        className={`p-2 rounded-lg flex-shrink-0 ${
                           transacao.tipo === "RECEITA"
                             ? "bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400"
                             : "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400"
@@ -95,30 +95,30 @@ export function TransacoesList({
                           <TrendingDown className="h-4 w-4" />
                         )}
                       </div>
-                      <div>
-                        <p className="font-medium text-sm text-gray-900 dark:text-gray-100">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
                           {transacao.descricao}
                         </p>
                         <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                          <span>
+                          <span className="truncate">
                             {transacao.categoria?.nome || "Sem categoria"}
                           </span>
-                          <span>•</span>
-                          <span>
+                          <span className="hidden sm:inline">•</span>
+                          <span className="hidden sm:inline">
                             {formatDateWithTime(transacao.dataCriacao)}
                           </span>
                         </div>
                         {transacao.observacoes && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">
                             {transacao.observacoes}
                           </p>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                       <div className="text-right">
                         <p
-                          className={`font-bold text-lg ${
+                          className={`font-bold text-sm sm:text-base md:text-lg whitespace-nowrap ${
                             transacao.tipo === "RECEITA"
                               ? "text-green-600 dark:text-green-400"
                               : "text-red-600 dark:text-red-400"
@@ -128,22 +128,22 @@ export function TransacoesList({
                           {formatCurrency(Math.abs(transacao.valor))}
                         </p>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-0.5 sm:gap-1">
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => handleEditClick(transacao)}
-                          className="h-8 w-8 p-0 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                          className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
                         >
-                          <Edit2 className="h-4 w-4" />
+                          <Edit2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
                           onClick={() => handleDeleteClick(transacao)}
-                          className="h-8 w-8 p-0 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          className="h-7 w-7 sm:h-8 sm:w-8 p-0 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </Button>
                       </div>
                     </div>
