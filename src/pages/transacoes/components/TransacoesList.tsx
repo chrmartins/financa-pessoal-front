@@ -82,7 +82,7 @@ export function TransacoesList({
                     className="flex items-center justify-between p-3 sm:p-4 md:p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors gap-2"
                   >
                     <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                      <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                      <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
                         <div
                           className={`p-2 rounded-lg ${
                             transacao.tipo === "RECEITA"
@@ -98,7 +98,7 @@ export function TransacoesList({
                         </div>
                         {transacao.categoria?.cor && (
                           <div
-                            className="h-1.5 w-1.5 rounded-full"
+                            className="h-2 w-2 rounded-full flex-shrink-0"
                             style={{
                               backgroundColor: transacao.categoria.cor,
                             }}

@@ -59,7 +59,7 @@ export function RecentTransactions({
                 className="flex items-center justify-between p-2 bg-white/50 dark:bg-gray-700/50 rounded-md border border-white/20 dark:border-gray-600/30"
               >
                 <div className="flex items-center gap-2">
-                  <div className="flex flex-col items-center gap-1">
+                  <div className="flex flex-col items-center gap-1.5">
                     <div
                       className={`p-1.5 rounded-md ${
                         transacao.tipo === "RECEITA"
@@ -75,7 +75,7 @@ export function RecentTransactions({
                     </div>
                     {transacao.categoria?.cor && (
                       <div
-                        className="h-1.5 w-1.5 rounded-full"
+                        className="h-2 w-2 rounded-full flex-shrink-0"
                         style={{
                           backgroundColor: transacao.categoria.cor,
                         }}
