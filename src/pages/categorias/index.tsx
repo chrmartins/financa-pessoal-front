@@ -33,7 +33,7 @@ export function CategoriasPage() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleCloseFormModal = () => {
+  const handleCloseFormModal = (_categoriaCriadaId?: string) => {
     setIsFormModalOpen(false);
     setSelectedCategoria(null);
   };

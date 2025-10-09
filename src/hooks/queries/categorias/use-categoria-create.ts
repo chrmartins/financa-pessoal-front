@@ -12,8 +12,11 @@ export function useCategoriaCreate() {
 
   return useMutation({
     mutationFn: (data: CreateCategoriaRequest) => categoriaService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["categorias-list", userId] });
+    onSuccess: async () => {
+      // Aguarda a invalidação do cache antes de continuar
+      await queryClient.invalidateQueries({
+        queryKey: ["categorias-list", userId],
+      });
     },
   });
 }

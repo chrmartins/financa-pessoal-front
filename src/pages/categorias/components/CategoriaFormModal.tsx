@@ -39,7 +39,7 @@ import { categoriaSchema, type CategoriaFormValues } from "../schema";
 interface CategoriaFormModalProps {
   categoria?: CategoriaResponse | null;
   open: boolean;
-  onClose: () => void;
+  onClose: (categoriaCriadaId?: string) => void;
 }
 
 const DEFAULT_COLOR = "#2563eb";
@@ -49,7 +49,7 @@ export function CategoriaFormModal({
   open,
   onClose,
 }: CategoriaFormModalProps) {
-  const isEdit = Boolean(categoria);
+  const isEdit = Boolean(categoria?.id); // Verifica se tem ID, não só se categoria existe
 
   const form = useForm<CategoriaFormValues>({
     resolver: zodResolver(categoriaSchema),
@@ -102,11 +102,25 @@ export function CategoriaFormModal({
           data: payload,
         });
         toast.success("Categoria atualizada com sucesso!");
+        handleClose();
       } else {
-        await createMutation.mutateAsync(payload);
+        const novaCategoria = await createMutation.mutateAsync(payload);
         toast.success("Categoria criada com sucesso!");
+
+        // Reset do form
+        form.reset({
+          nome: "",
+          descricao: "",
+          tipo: "DESPESA",
+          cor: DEFAULT_COLOR,
+          ativa: true,
+        });
+
+        // Delay para garantir que o cache foi atualizado antes de fechar
+        setTimeout(() => {
+          onClose(novaCategoria.id);
+        }, 300);
       }
-      handleClose();
     } catch (error) {
       console.error("Erro ao salvar categoria", error);
       toast.error("Não foi possível salvar a categoria.");

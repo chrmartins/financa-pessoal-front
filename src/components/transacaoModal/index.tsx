@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -18,11 +19,12 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useCategoriasList } from "@/hooks/queries/categorias/use-categorias-list";
 import { useTransacaoCreate } from "@/hooks/queries/transacoes/use-transacao-create";
+import { CategoriaFormModal } from "@/pages/categorias/components/CategoriaFormModal";
 import type { CreateTransacaoRequest } from "@/types";
 import { formatCurrencyInput, parseCurrencyInput } from "@/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CalendarDays, Clock, Loader2, RefreshCw } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { CalendarDays, Clock, Loader2, Plus, RefreshCw } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -37,6 +39,10 @@ export function TransacaoModal({
 }: TransacaoModalProps) {
   const isEditing = Boolean(transacao);
   const successHandledRef = useRef(false);
+  const [categoriaModalOpen, setCategoriaModalOpen] = useState(false);
+  const [novaCategoriaCriada, setNovaCategoriaCriada] = useState<string | null>(
+    null
+  );
 
   const {
     register,
@@ -106,6 +112,20 @@ export function TransacaoModal({
     (categoria) => categoria.tipo === tipo && categoria.ativa
   );
 
+  // Selecionar automaticamente a nova categoria criada
+  useEffect(() => {
+    if (novaCategoriaCriada && categorias.length > 0) {
+      const categoriaEncontrada = categorias.find(
+        (c) => c.id === novaCategoriaCriada && c.tipo === tipo
+      );
+
+      if (categoriaEncontrada) {
+        setValue("categoriaId", novaCategoriaCriada);
+        setNovaCategoriaCriada(null);
+        toast.success(`Categoria "${categoriaEncontrada.nome}" selecionada!`);
+      }
+    }
+  }, [novaCategoriaCriada, categorias, tipo, setValue]);
   useEffect(() => {
     const categoriaAtual = watch("categoriaId");
     if (categoriaAtual && categorias.length > 0) {
@@ -211,6 +231,11 @@ export function TransacaoModal({
               </>
             )}
           </DialogTitle>
+          <DialogDescription>
+            {isEditing
+              ? "Atualize as informações da transação selecionada."
+              : "Registre uma nova receita ou despesa para controlar suas finanças."}
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -324,8 +349,14 @@ export function TransacaoModal({
           <div>
             <Label>Categoria</Label>
             <Select
-              value={categoriaId}
-              onValueChange={(value) => setValue("categoriaId", value)}
+              value={categoriaId === "_create_new" ? "" : categoriaId}
+              onValueChange={(value) => {
+                if (value === "_create_new") {
+                  setCategoriaModalOpen(true);
+                } else {
+                  setValue("categoriaId", value);
+                }
+              }}
               disabled={loadingCategorias}
             >
               <SelectTrigger>
@@ -343,6 +374,8 @@ export function TransacaoModal({
                     placeholder={
                       loadingCategorias
                         ? "Carregando categorias..."
+                        : categoriasFiltradas.length === 0
+                        ? "Nenhuma categoria disponível"
                         : "Selecione uma categoria"
                     }
                   />
@@ -361,11 +394,29 @@ export function TransacaoModal({
                     </div>
                   </SelectItem>
                 ))}
+                <SelectItem
+                  value="_create_new"
+                  className="text-primary font-medium border-t mt-1 pt-2"
+                >
+                  <div className="flex items-center gap-2">
+                    <Plus className="h-4 w-4" />
+                    <span>
+                      Nova categoria de{" "}
+                      {tipo === "RECEITA" ? "receita" : "despesa"}
+                    </span>
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
             {errors.categoriaId && (
               <p className="text-sm text-red-500 mt-1">
                 {errors.categoriaId.message}
+              </p>
+            )}
+            {categoriasFiltradas.length === 0 && !loadingCategorias && (
+              <p className="text-xs text-muted-foreground mt-1">
+                💡 Crie sua primeira categoria de{" "}
+                {tipo === "RECEITA" ? "receita" : "despesa"} clicando acima
               </p>
             )}
           </div>
@@ -466,6 +517,32 @@ export function TransacaoModal({
           </div>
         </form>
       </DialogContent>
+
+      {/* Modal de criação de categoria */}
+      <CategoriaFormModal
+        open={categoriaModalOpen}
+        onClose={(categoriaCriadaId?: string) => {
+          setCategoriaModalOpen(false);
+          if (categoriaCriadaId) {
+            setNovaCategoriaCriada(categoriaCriadaId);
+          }
+        }}
+        categoria={
+          tipo
+            ? {
+                id: "",
+                nome: "",
+                descricao: "",
+                tipo: tipo,
+                cor: "",
+                ativa: true,
+                usuarioId: "",
+                dataCriacao: "",
+                dataAtualizacao: "",
+              }
+            : null
+        }
+      />
     </Dialog>
   );
 }
