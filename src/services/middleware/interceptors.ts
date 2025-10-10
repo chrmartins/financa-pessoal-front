@@ -1,4 +1,5 @@
 import axios from "axios";
+import { toast } from "sonner";
 
 /**
  * Configuração base do Axios para todas as requisições da aplicação
@@ -30,6 +31,30 @@ export const testConnection = async (): Promise<boolean> => {
       return false;
     }
   }
+};
+
+/**
+ * Função para fazer logout do usuário de forma limpa
+ */
+const handleSessionExpired = () => {
+  // Limpa todo o estado local
+  localStorage.removeItem("token");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("usuario");
+  localStorage.removeItem("user-store");
+
+  // Mostra mensagem amigável
+  toast.error("Sua sessão expirou", {
+    description: "Por favor, faça login novamente para continuar.",
+    duration: 5000,
+  });
+
+  // Aguarda um momento para o toast ser exibido antes de redirecionar
+  setTimeout(() => {
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
+  }, 500);
 };
 
 /**
@@ -66,9 +91,19 @@ api.interceptors.response.use(
     if (error.response) {
       const status = error.response?.status;
 
-      // Trata 401 (Unauthorized) como token expirado
-      if (status === 401 && !originalRequest._retry) {
-        console.error("🚫 Erro 401: Token expirado ou inválido");
+      // Trata 401 (Unauthorized) e 403 (Forbidden) como token expirado/inválido
+      if ((status === 401 || status === 403) && !originalRequest._retry) {
+        console.error(`🚫 Erro ${status}: Token expirado ou inválido`);
+
+        // Não tenta refresh se for a rota de login/refresh
+        const isAuthEndpoint =
+          originalRequest.url?.includes("/login") ||
+          originalRequest.url?.includes("/refresh");
+
+        if (isAuthEndpoint) {
+          // Apenas rejeita a requisição sem fazer logout
+          return Promise.reject(error);
+        }
 
         // Marca que já tentou renovar para evitar loop infinito
         originalRequest._retry = true;
@@ -86,26 +121,11 @@ api.interceptors.response.use(
         } catch (refreshError) {
           console.error("❌ Falha ao renovar token:", refreshError);
 
-          // Se falhar ao renovar, limpa localStorage e redireciona para login
-          localStorage.removeItem("token");
-          localStorage.removeItem("refreshToken");
-          localStorage.removeItem("usuario");
-          localStorage.removeItem("user-store");
-
-          // Redireciona para login
-          if (typeof window !== "undefined") {
-            window.location.href = "/login";
-          }
+          // Usa função centralizada para logout
+          handleSessionExpired();
 
           return Promise.reject(refreshError);
         }
-      }
-
-      if (status === 403) {
-        console.warn(
-          "🚫 Erro 403: Acesso negado. Verifique permissões do usuário."
-        );
-        return Promise.reject(error);
       }
 
       // Em desenvolvimento, mostrar informações úteis
