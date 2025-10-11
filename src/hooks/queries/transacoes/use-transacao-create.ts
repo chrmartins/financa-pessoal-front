@@ -2,6 +2,7 @@ import type { TransacaoListResponse } from "@/services/transacoes/transacao-serv
 import { transacaoService } from "@/services/transacoes/transacao-service";
 import type { CreateTransacaoRequest, TransacaoResponse } from "@/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useUserStore } from "@/stores/auth/use-user-store";
 
 /**
  * Opções para o hook de criação de transações
@@ -16,6 +17,7 @@ interface UseTransacaoCreateOptions {
  */
 export function useTransacaoCreate(options?: UseTransacaoCreateOptions) {
   const queryClient = useQueryClient();
+  const userId = useUserStore((state) => state.user?.id);
 
   return useMutation({
     mutationFn: (data: CreateTransacaoRequest) => {
@@ -49,21 +51,17 @@ export function useTransacaoCreate(options?: UseTransacaoCreateOptions) {
 
       // NÃO invalidar transacoes-list para manter cache local
       // Quando backend for corrigido, remover o workaround acima e descomentar linha abaixo:
-      // await queryClient.invalidateQueries({ queryKey: ["transacoes-list"], exact: false });
+      // await queryClient.invalidateQueries({ queryKey: ["transacoes-list", userId], exact: false });
 
-      // Invalidar resumo financeiro
+      // Invalidar resumo financeiro (incluindo userId na chave)
       await queryClient.invalidateQueries({
-        queryKey: ["resumo-financeiro"],
-        exact: false,
-      });
-      await queryClient.refetchQueries({
-        queryKey: ["resumo-financeiro"],
+        queryKey: ["resumo-financeiro", userId],
         exact: false,
       });
 
-      // Invalidar dados de tendência do gráfico
+      // Invalidar dados de tendência do gráfico (incluindo userId na chave)
       await queryClient.invalidateQueries({
-        queryKey: ["transacoes-trend"],
+        queryKey: ["transacoes-trend", userId],
         exact: false,
       });
 

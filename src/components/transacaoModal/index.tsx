@@ -19,6 +19,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useCategoriasList } from "@/hooks/queries/categorias/use-categorias-list";
 import { useTransacaoCreate } from "@/hooks/queries/transacoes/use-transacao-create";
+import { useTransacaoUpdate } from "@/hooks/queries/transacoes/use-transacao-update";
 import { CategoriaFormModal } from "@/pages/categorias/components/CategoriaFormModal";
 import type { CreateTransacaoRequest } from "@/types";
 import { formatCurrencyInput, parseCurrencyInput } from "@/utils";
@@ -73,11 +74,29 @@ export function TransacaoModal({
   const {
     mutate: createTransacao,
     isPending: isCreating,
-    isSuccess,
-    isError,
-    error,
-    reset: resetMutation,
+    isSuccess: isCreateSuccess,
+    isError: isCreateError,
+    error: createError,
+    reset: resetCreateMutation,
   } = useTransacaoCreate();
+
+  const {
+    mutate: updateTransacao,
+    isPending: isUpdating,
+    isSuccess: isUpdateSuccess,
+    isError: isUpdateError,
+    error: updateError,
+    reset: resetUpdateMutation,
+  } = useTransacaoUpdate();
+
+  const isPending = isCreating || isUpdating;
+  const isSuccess = isCreateSuccess || isUpdateSuccess;
+  const isError = isCreateError || isUpdateError;
+  const error = createError || updateError;
+  const resetMutation = () => {
+    resetCreateMutation();
+    resetUpdateMutation();
+  };
 
   useEffect(() => {
     if (isSuccess && !successHandledRef.current) {
@@ -141,21 +160,24 @@ export function TransacaoModal({
   // Resetar formulário quando abrir/fechar modal
   useEffect(() => {
     if (open) {
-      // Resetar mutation ao abrir modal
       resetMutation();
       successHandledRef.current = false;
 
       if (transacao) {
-        const valorEmCents = Math.round(transacao.valor * 100).toString();
+        // Converter valor de reais para centavos e formatar
+        const valorEmCentavos = Math.round(transacao.valor * 100);
+        const valorFormatado = formatCurrencyInput(valorEmCentavos.toString());
+
         reset({
-          descricao: transacao.descricao,
-          valorFormatado: formatCurrencyInput(valorEmCents),
-          dataTransacao: transacao.dataTransacao,
-          tipo: transacao.tipo,
-          categoriaId: transacao.categoria.id,
+          descricao: transacao.descricao || "",
+          valorFormatado: valorFormatado,
+          dataTransacao:
+            transacao.dataTransacao || new Date().toISOString().split("T")[0],
+          tipo: transacao.tipo || "DESPESA",
+          categoriaId: transacao.categoria?.id || "",
           observacoes: transacao.observacoes || "",
-          recorrente: transacao.recorrente || false,
-          quantidadeParcelas: transacao.quantidadeParcelas || 2,
+          recorrente: false, // Sempre false ao editar
+          quantidadeParcelas: 2,
         });
       } else {
         reset({
@@ -170,7 +192,8 @@ export function TransacaoModal({
         });
       }
     }
-  }, [open, transacao, reset, resetMutation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, transacao?.id]);
 
   // Função para formatar valor conforme usuário digita
   const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -199,15 +222,23 @@ export function TransacaoModal({
       tipo: data.tipo,
       categoriaId: data.categoriaId,
       observacoes: data.observacoes?.trim() || "",
-      recorrente: data.recorrente,
-      quantidadeParcelas: data.recorrente ? data.quantidadeParcelas : undefined,
-      tipoRecorrencia: data.recorrente ? "MENSAL" : undefined,
-      valorTotalOriginal: data.recorrente
-        ? valorNumerico * data.quantidadeParcelas
-        : undefined,
+      recorrente: isEditing ? false : data.recorrente,
+      quantidadeParcelas:
+        !isEditing && data.recorrente ? data.quantidadeParcelas : undefined,
+      tipoRecorrencia: !isEditing && data.recorrente ? "MENSAL" : undefined,
+      valorTotalOriginal:
+        !isEditing && data.recorrente
+          ? valorNumerico * data.quantidadeParcelas
+          : undefined,
     };
 
-    createTransacao(requestData);
+    if (isEditing && transacao?.id) {
+      // Atualizar transação existente
+      updateTransacao({ id: transacao.id, data: requestData });
+    } else {
+      // Criar nova transação
+      createTransacao(requestData);
+    }
   });
 
   const categoriaId = watch("categoriaId");
@@ -428,76 +459,79 @@ export function TransacaoModal({
           </div>
 
           {/* Recorrência Simplificada */}
-          <div className="border rounded-lg p-4 bg-muted/30">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <RefreshCw className="h-4 w-4 text-blue-500" />
-                <Label className="font-medium">É recorrente? (mensal)</Label>
+          {!isEditing && (
+            <div className="border rounded-lg p-4 bg-muted/30">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <RefreshCw className="h-4 w-4 text-blue-500" />
+                  <Label className="font-medium">É recorrente? (mensal)</Label>
+                </div>
+                <Switch
+                  checked={recorrente}
+                  onCheckedChange={(checked) => setValue("recorrente", checked)}
+                />
               </div>
-              <Switch
-                checked={recorrente}
-                onCheckedChange={(checked) => setValue("recorrente", checked)}
-              />
-            </div>
 
-            {recorrente && (
-              <div className="space-y-3">
-                <div>
-                  <Label>Quantas vezes?</Label>
-                  <Select
-                    value={quantidadeParcelas.toString()}
-                    onValueChange={(value) =>
-                      setValue("quantidadeParcelas", Number(value))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione quantas vezes" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-60">
-                      {opcoesQuantidade.map((quantidade) => (
-                        <SelectItem
-                          key={quantidade}
-                          value={quantidade.toString()}
-                        >
-                          {quantidade}x{" "}
-                          {quantidade <= 12
-                            ? `(${quantidade} ${
-                                quantidade === 1 ? "mês" : "meses"
-                              })`
-                            : `(${Math.round((quantidade / 12) * 10) / 10} ${
-                                quantidade <= 12 ? "ano" : "anos"
-                              })`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.quantidadeParcelas && (
-                    <p className="text-sm text-red-500 mt-1">
-                      {errors.quantidadeParcelas.message}
-                    </p>
+              {recorrente && (
+                <div className="space-y-3">
+                  <div>
+                    <Label>Quantas vezes?</Label>
+                    <Select
+                      value={quantidadeParcelas.toString()}
+                      onValueChange={(value) =>
+                        setValue("quantidadeParcelas", Number(value))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione quantas vezes" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {opcoesQuantidade.map((quantidade) => (
+                          <SelectItem
+                            key={quantidade}
+                            value={quantidade.toString()}
+                          >
+                            {quantidade}x{" "}
+                            {quantidade <= 12
+                              ? `(${quantidade} ${
+                                  quantidade === 1 ? "mês" : "meses"
+                                })`
+                              : `(${Math.round((quantidade / 12) * 10) / 10} ${
+                                  quantidade <= 12 ? "ano" : "anos"
+                                })`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.quantidadeParcelas && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {errors.quantidadeParcelas.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Preview da recorrência */}
+                  {quantidadeParcelas && parseCurrencyInput(valorFormatado) && (
+                    <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-md">
+                      <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+                        <RefreshCw className="inline h-4 w-4 mr-1" />
+                        {getExemploTexto(
+                          recorrente,
+                          quantidadeParcelas,
+                          valorFormatado,
+                          tipo
+                        )}
+                      </p>
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                        Criará {quantidadeParcelas} transações mensais
+                        automáticas
+                      </p>
+                    </div>
                   )}
                 </div>
-
-                {/* Preview da recorrência */}
-                {quantidadeParcelas && parseCurrencyInput(valorFormatado) && (
-                  <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-md">
-                    <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
-                      <RefreshCw className="inline h-4 w-4 mr-1" />
-                      {getExemploTexto(
-                        recorrente,
-                        quantidadeParcelas,
-                        valorFormatado,
-                        tipo
-                      )}
-                    </p>
-                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                      Criará {quantidadeParcelas} transações mensais automáticas
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* Observações */}
           <div>
@@ -515,8 +549,8 @@ export function TransacaoModal({
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isCreating}>
-              {isCreating && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            <Button type="submit" disabled={isPending}>
+              {isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               {isEditing ? "Atualizar" : "Criar"}
               {recorrente && ` (${quantidadeParcelas}x)`}
             </Button>
