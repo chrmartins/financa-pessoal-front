@@ -8,6 +8,9 @@ export function useUsuarioDelete() {
     mutationFn: (id: string) => UsuarioService.desativar(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["usuarios"] });
+
+      // Força o refetch imediato
+      queryClient.refetchQueries({ queryKey: ["usuarios"] });
     },
   });
 }

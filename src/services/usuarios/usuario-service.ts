@@ -73,4 +73,17 @@ export class UsuarioService {
   static async desativar(id: string): Promise<void> {
     await api.delete(`${this.BASE_URL}/${id}`);
   }
+
+  /**
+   * Deleta usuário permanentemente (hard delete)
+   * 🔒 Apenas ADMIN pode acessar
+   * Remove permanentemente do banco de dados
+   * ⚠️ ATENÇÃO: Esta ação é irreversível e remove todas as transações e categorias relacionadas
+   */
+  static async deletarPermanentemente(id: string): Promise<string> {
+    const response = await api.delete<string>(
+      `${this.BASE_URL}/${id}/permanente`
+    );
+    return response.data;
+  }
 }

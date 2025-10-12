@@ -10,22 +10,35 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { UsuarioModal } from "@/components/usuarioModal";
 import { useUsuarioDelete } from "@/hooks/queries/usuarios/use-usuario-delete";
+import { useUsuarioDeletarPermanentemente } from "@/hooks/queries/usuarios/use-usuario-delete-permanente";
 import { useUsuariosList } from "@/hooks/queries/usuarios/use-usuarios-list";
+import { useUserStore } from "@/stores/auth/use-user-store";
 import type { Usuario } from "@/types";
 import { formatDate } from "@/utils";
 import { isAxiosError } from "axios";
-import { Pencil, Plus, UserX, Users } from "lucide-react";
+import { Pencil, Plus, Trash2, UserX, Users } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import { DeleteUsuarioPermanentementeModal } from "./components/DeleteUsuarioPermanentementeModal";
 
 export default function UsuariosPage() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [usuarioSelecionado, setUsuarioSelecionado] = useState<
     Usuario | undefined
   >(undefined);
+  const [usuarioParaDeletar, setUsuarioParaDeletar] = useState<Usuario | null>(
+    null
+  );
+
+  const { user: currentUser } = useUserStore();
+  const isAdmin = currentUser?.papel === "ADMIN";
 
   const { data: usuarios, isLoading } = useUsuariosList();
   const { mutate: desativarUsuario, isPending: isDesativando } =
     useUsuarioDelete();
+  const { mutate: deletarPermanentemente, isPending: isDeletando } =
+    useUsuarioDeletarPermanentemente();
 
   const handleNovoUsuario = () => {
     setUsuarioSelecionado(undefined);
@@ -45,7 +58,7 @@ export default function UsuariosPage() {
     ) {
       desativarUsuario(usuario.id, {
         onSuccess: () => {
-          alert("Usuário desativado com sucesso!");
+          toast.success("Usuário desativado com sucesso!");
         },
         onError: (error) => {
           console.error("Erro ao desativar usuário:", error);
@@ -56,10 +69,62 @@ export default function UsuariosPage() {
             ? error.message
             : "Erro ao desativar usuário.";
 
-          alert(message);
+          toast.error(message);
         },
       });
     }
+  };
+
+  const handleDeletarPermanentemente = (usuario: Usuario) => {
+    // Verifica se está tentando deletar a si mesmo
+    if (usuario.id === currentUser?.id) {
+      toast.error("Você não pode deletar sua própria conta!", {
+        description:
+          "Para deletar sua conta, peça para outro administrador fazer isso.",
+      });
+      return;
+    }
+
+    setUsuarioParaDeletar(usuario);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmarDeletarPermanentemente = (id: string) => {
+    deletarPermanentemente(id, {
+      onSuccess: () => {
+        toast.success(
+          "Usuário deletado permanentemente com sucesso! Todas as transações e categorias relacionadas foram removidas."
+        );
+        setDeleteModalOpen(false);
+        setUsuarioParaDeletar(null);
+      },
+      onError: (error) => {
+        console.error("Erro ao deletar usuário:", error);
+
+        let message = "Erro ao deletar usuário permanentemente.";
+        let description = "";
+
+        if (isAxiosError(error)) {
+          if (error.response?.status === 403) {
+            message = "Acesso negado - Erro 403";
+            description =
+              "Possíveis causas:\n" +
+              "• Token JWT expirado ou inválido\n" +
+              "• Backend espera formato de role diferente (ex: ROLE_ADMIN)\n" +
+              "• Você está tentando deletar sua própria conta\n" +
+              "• Permissões insuficientes no backend";
+          } else if (error.response?.status === 404) {
+            message = "Usuário não encontrado.";
+          } else {
+            message = error.response?.data?.message || error.message;
+          }
+        } else if (error instanceof Error) {
+          message = error.message;
+        }
+
+        toast.error(message, description ? { description } : undefined);
+      },
+    });
   };
 
   if (isLoading) {
@@ -182,6 +247,21 @@ export default function UsuariosPage() {
                                 Desativar
                               </Button>
                             )}
+                            {isAdmin && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() =>
+                                  handleDeletarPermanentemente(usuario)
+                                }
+                                disabled={isDeletando}
+                                className="bg-red-600 hover:bg-red-700"
+                                title="Apenas administradores podem deletar permanentemente"
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Deletar
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -235,28 +315,45 @@ export default function UsuariosPage() {
                           ? formatDate(usuario.ultimoAcesso)
                           : "Nunca acessou"}
                       </p>
-                      <div className="flex flex-col sm:flex-row gap-2">
+                      <div className="flex flex-col gap-2">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleEditarUsuario(usuario)}
-                          className="w-full sm:flex-1"
+                          className="w-full"
                         >
                           <Pencil className="h-3.5 w-3.5 mr-1.5" />
                           Editar
                         </Button>
-                        {usuario.ativo && (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDesativarUsuario(usuario)}
-                            disabled={isDesativando}
-                            className="w-full sm:flex-1"
-                          >
-                            <UserX className="h-3.5 w-3.5 mr-1.5" />
-                            Desativar
-                          </Button>
-                        )}
+                        <div className="flex gap-2">
+                          {usuario.ativo && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDesativarUsuario(usuario)}
+                              disabled={isDesativando}
+                              className="flex-1"
+                            >
+                              <UserX className="h-3.5 w-3.5 mr-1.5" />
+                              Desativar
+                            </Button>
+                          )}
+                          {isAdmin && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() =>
+                                handleDeletarPermanentemente(usuario)
+                              }
+                              disabled={isDeletando}
+                              className="flex-1 bg-red-600 hover:bg-red-700"
+                              title="Apenas administradores podem deletar permanentemente"
+                            >
+                              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                              Deletar
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -271,6 +368,14 @@ export default function UsuariosPage() {
         open={modalOpen}
         onOpenChange={setModalOpen}
         usuario={usuarioSelecionado}
+      />
+
+      <DeleteUsuarioPermanentementeModal
+        open={deleteModalOpen}
+        onOpenChange={setDeleteModalOpen}
+        usuario={usuarioParaDeletar}
+        onConfirm={confirmarDeletarPermanentemente}
+        isDeleting={isDeletando}
       />
     </div>
   );
