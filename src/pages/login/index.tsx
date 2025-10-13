@@ -52,8 +52,10 @@ export const Login = () => {
   // SEO otimizado para a página de login
   useSEO({
     title: "Login - NControle | Sistema de Controle Financeiro Pessoal",
-    description: "Acesse sua conta NControle e gerencie suas finanças pessoais. Login rápido e seguro com Google ou email. Controle total das suas despesas e receitas.",
-    keywords: "login controle financeiro, acessar conta financeira, entrar sistema financeiro, login gestão de gastos",
+    description:
+      "Acesse sua conta NControle e gerencie suas finanças pessoais. Login rápido e seguro com Google ou email. Controle total das suas despesas e receitas.",
+    keywords:
+      "login controle financeiro, acessar conta financeira, entrar sistema financeiro, login gestão de gastos",
     url: "https://www.ncontrole.com.br/login",
   });
 

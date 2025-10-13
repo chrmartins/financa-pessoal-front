@@ -20,7 +20,11 @@ export function useSEO({
     document.title = title;
 
     // Atualizar meta tags
-    const updateMetaTag = (name: string, content: string, isProperty = false) => {
+    const updateMetaTag = (
+      name: string,
+      content: string,
+      isProperty = false
+    ) => {
       const attribute = isProperty ? "property" : "name";
       let element = document.querySelector(
         `meta[${attribute}="${name}"]`
@@ -52,7 +56,9 @@ export function useSEO({
     updateMetaTag("twitter:url", url);
 
     // Atualizar canonical
-    let canonical = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+    let canonical = document.querySelector(
+      'link[rel="canonical"]'
+    ) as HTMLLinkElement;
     if (!canonical) {
       canonical = document.createElement("link");
       canonical.rel = "canonical";
