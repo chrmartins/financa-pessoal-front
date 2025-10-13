@@ -1,0 +1,10 @@
+export { CTASection } from "./CTASection";
+export { DemoSection } from "./DemoSection";
+export { FAQSection } from "./FAQSection";
+export { FeaturesSection } from "./FeaturesSection";
+export { Footer } from "./Footer";
+export { Header } from "./Header";
+export { HeroSection } from "./HeroSection";
+export { PricingSection } from "./PricingSection";
+export { SocialProof } from "./SocialProof";
+export { TestimonialsSection } from "./TestimonialsSection";
