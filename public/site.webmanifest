@@ -1,0 +1,19 @@
+{
+  "name": "NControle - Controle Financeiro Pessoal",
+  "short_name": "NControle",
+  "description": "Sistema completo de gestão financeira pessoal. Controle suas despesas, receitas e tenha total controle do seu dinheiro.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "theme_color": "#3b82f6",
+  "background_color": "#0f172a",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/",
+  "orientation": "portrait"
+}
