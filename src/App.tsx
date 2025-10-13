@@ -1,32 +1,12 @@
-import { Layout } from "@/components/layout/layout";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AppRoutes } from "@/routes";
 import { useUIStore } from "@/stores/ui/use-ui-store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { lazy, Suspense, useEffect } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter } from "react-router-dom";
 
 // Importação dos interceptors para configuração automática
 import "@/services/middleware/interceptors";
-
-// Lazy loading das páginas
-const Login = lazy(() =>
-  import("@/pages/login").then((module) => ({ default: module.Login }))
-);
-const Dashboard = lazy(() =>
-  import("@/pages/dashboard").then((module) => ({ default: module.Dashboard }))
-);
-const Transacoes = lazy(() =>
-  import("@/pages/transacoes").then((module) => ({
-    default: module.Transacoes,
-  }))
-);
-const Categorias = lazy(() =>
-  import("@/pages/categorias").then((module) => ({
-    default: module.CategoriasPage,
-  }))
-);
-const Usuarios = lazy(() => import("@/pages/usuarios"));
 
 // Configuração do React Query
 const queryClient = new QueryClient({
@@ -38,13 +18,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-// Componente de loading
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-[400px]">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-  </div>
-);
 
 function App() {
   const { setIsMobile } = useUIStore();
@@ -64,30 +37,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            {/* Rota pública de login */}
-            <Route path="/login" element={<Login />} />
-
-            {/* Rotas protegidas */}
-            <Route
-              path="/*"
-              element={
-                <ProtectedRoute>
-                  <Layout>
-                    <Routes>
-                      <Route path="/" element={<Dashboard />} />
-                      <Route path="/dashboard" element={<Dashboard />} />
-                      <Route path="/transacoes" element={<Transacoes />} />
-                      <Route path="/categorias" element={<Categorias />} />
-                      <Route path="/usuarios" element={<Usuarios />} />
-                    </Routes>
-                  </Layout>
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </Suspense>
+        <AppRoutes />
       </BrowserRouter>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>

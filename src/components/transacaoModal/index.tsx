@@ -232,6 +232,18 @@ export function TransacaoModal({
           : undefined,
     };
 
+    // Debug: verificar dados enviados para transação recorrente
+    if (data.recorrente && !isEditing) {
+      console.log("🔄 Criando transação recorrente:", {
+        descricao: requestData.descricao,
+        valor: requestData.valor,
+        recorrente: requestData.recorrente,
+        quantidadeParcelas: requestData.quantidadeParcelas,
+        tipoRecorrencia: requestData.tipoRecorrencia,
+        valorTotalOriginal: requestData.valorTotalOriginal,
+      });
+    }
+
     if (isEditing && transacao?.id) {
       // Atualizar transação existente
       updateTransacao({ id: transacao.id, data: requestData });
