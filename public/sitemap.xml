@@ -44,4 +44,12 @@
     <priority>0.7</priority>
   </url>
   
+  <!-- Sobre NoControle -->
+  <url>
+    <loc>https://www.ncontrole.com.br/sobre-nocontrole.txt</loc>
+    <lastmod>2025-10-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
 </urlset>
