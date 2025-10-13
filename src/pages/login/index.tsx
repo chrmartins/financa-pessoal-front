@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { useSEO } from "@/hooks/use-seo";
 import { useUserStore } from "@/stores/auth/use-user-store";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { isAxiosError } from "axios";
@@ -48,6 +49,14 @@ type AuthLocationState = {
 };
 
 export const Login = () => {
+  // SEO otimizado para a página de login
+  useSEO({
+    title: "Login - NControle | Sistema de Controle Financeiro Pessoal",
+    description: "Acesse sua conta NControle e gerencie suas finanças pessoais. Login rápido e seguro com Google ou email. Controle total das suas despesas e receitas.",
+    keywords: "login controle financeiro, acessar conta financeira, entrar sistema financeiro, login gestão de gastos",
+    url: "https://www.ncontrole.com.br/login",
+  });
+
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);

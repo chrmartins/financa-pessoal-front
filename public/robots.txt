@@ -1,0 +1,17 @@
+# Permite que todos os crawlers acessem todo o site
+User-agent: *
+Allow: /
+
+# URLs do sitemap
+Sitemap: https://www.ncontrole.com.br/sitemap.xml
+
+# Otimizações específicas
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Desabilitar crawling de assets desnecessários
+Disallow: /api/
+Disallow: /*.json$
