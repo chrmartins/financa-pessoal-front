@@ -104,9 +104,8 @@ export const transacaoService = {
 
       let allTransactions = response.data;
 
-      // 🔒 SEGURANÇA: Filtrar no frontend para garantir que só vemos transações do usuário logado
-      // TODO URGENTE: O backend DEVE fazer isso! Isso é uma vulnerabilidade de segurança!
-      allTransactions = allTransactions.filter((t) => t.usuarioId === user.id);
+      // NOTA: Backend já filtra transações por usuário baseado no JWT
+      // Não precisa filtrar novamente no frontend
 
       // WORKAROUND: Filtrar transações por data no frontend
       // TODO: O backend deveria fazer isso, mas não está respeitando os filtros de data

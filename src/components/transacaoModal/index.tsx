@@ -247,8 +247,8 @@ export function TransacaoModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             {isEditing ? (
               <>
@@ -269,7 +269,10 @@ export function TransacaoModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 overflow-y-auto flex-1 pr-2"
+        >
           {/* Descrição */}
           <div>
             <Label htmlFor="descricao">Descrição</Label>
@@ -545,7 +548,7 @@ export function TransacaoModal({
           </div>
 
           {/* Botões */}
-          <div className="flex justify-end space-x-2 pt-4">
+          <div className="flex justify-end space-x-2 pt-4 sticky bottom-0 bg-background border-t mt-4 -mx-2 px-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
