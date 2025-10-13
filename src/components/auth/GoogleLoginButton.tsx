@@ -68,10 +68,14 @@ export function GoogleLoginButton() {
       await loginWithGoogle(response.credential);
 
       toast.success("Login realizado com sucesso!", {
-        description: "Bem-vindo(a) de volta!",
+        description: "Redirecionando para o dashboard...",
+        duration: 2000,
       });
 
-      navigate("/dashboard");
+      // Pequeno delay para garantir que o toast seja visto antes do redirect
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 500);
     } catch (error) {
       console.error("Erro ao fazer login com Google:", error);
       toast.error("Erro ao fazer login", {
@@ -80,7 +84,6 @@ export function GoogleLoginButton() {
             ? error.message
             : "Não foi possível autenticar com o Google. Tente novamente.",
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -95,16 +98,20 @@ export function GoogleLoginButton() {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full relative">
       {isLoading && (
-        <div className="flex items-center justify-center p-3 border rounded-md">
-          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          Autenticando...
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm rounded-md">
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Autenticando com Google...
+            </p>
+          </div>
         </div>
       )}
       <div
         id="google-signin-button"
-        className={isLoading ? "hidden" : ""}
+        className="w-full"
         style={{ width: "100%" }}
       />
     </div>
