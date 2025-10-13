@@ -124,6 +124,68 @@ export class AuthService {
   }
 
   /**
+   * Fazer login com Google OAuth
+   */
+  static async loginWithGoogle(googleToken: string): Promise<LoginResponse> {
+    try {
+      // Enviar token do Google para validação no backend
+      const { data } = await api.post<ApiLoginResponse>("/auth/google", {
+        token: googleToken,
+      });
+
+      if (!data?.usuario || !data?.token || !data?.refreshToken) {
+        throw new Error("Resposta de login inválida. Tente novamente.");
+      }
+
+      // Armazenar tokens
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("refreshToken", data.refreshToken);
+      localStorage.setItem("usuario", JSON.stringify(data.usuario));
+
+      return {
+        user: data.usuario,
+        token: data.token,
+        refreshToken: data.refreshToken,
+        expiresIn: data.expiresIn,
+      };
+    } catch (error: unknown) {
+      if (isAxiosError(error)) {
+        const status = error.response?.status;
+
+        if (status === 401 || status === 403) {
+          console.error("🚫 Erro de autenticação Google:", status);
+          throw new Error("Falha na autenticação com Google");
+        }
+
+        if (status && status >= 500) {
+          console.error("🔥 Erro do servidor:", status);
+          throw new Error(
+            "Erro interno do servidor. Tente novamente mais tarde."
+          );
+        }
+
+        const message =
+          (typeof error.response?.data === "object" &&
+          error.response?.data !== null &&
+          "message" in error.response.data &&
+          typeof error.response.data.message === "string"
+            ? error.response.data.message
+            : undefined) ||
+          error.message ||
+          "Erro ao fazer login com Google. Tente novamente.";
+
+        throw new Error(message);
+      }
+
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+
+      throw new Error("Erro ao fazer login com Google. Tente novamente.");
+    }
+  }
+
+  /**
    * Renovar token usando refresh token
    */
   static async refreshToken(): Promise<LoginResponse> {

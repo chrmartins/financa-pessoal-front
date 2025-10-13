@@ -21,6 +21,7 @@ interface UserState {
   setToken: (token: string | null) => void;
   setLoading: (loading: boolean) => void;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (googleToken: string) => Promise<void>;
   logout: () => Promise<void>;
   validateToken: () => Promise<void>;
 }
@@ -62,6 +63,26 @@ export const useUserStore = create<UserState>()(
             setToken(response.token);
           } catch (error) {
             console.error("❌ STORE - Erro no login:", error);
+            throw error;
+          } finally {
+            setLoading(false);
+          }
+        },
+
+        // Fazer login com Google OAuth
+        loginWithGoogle: async (googleToken: string) => {
+          const { setUser, setToken, setLoading } = get();
+
+          setLoading(true);
+          try {
+            const response: LoginResponse = await AuthService.loginWithGoogle(
+              googleToken
+            );
+
+            setUser(response.user);
+            setToken(response.token);
+          } catch (error) {
+            console.error("❌ STORE - Erro no login com Google:", error);
             throw error;
           } finally {
             setLoading(false);

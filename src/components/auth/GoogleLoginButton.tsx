@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { useUserStore } from "@/stores/auth/use-user-store";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +22,7 @@ declare global {
 
 export function GoogleLoginButton() {
   const navigate = useNavigate();
+  const { loginWithGoogle } = useUserStore();
   const [isLoading, setIsLoading] = useState(false);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
 
@@ -62,31 +64,11 @@ export function GoogleLoginButton() {
     try {
       setIsLoading(true);
 
-      // Enviar o credential (JWT token) para o backend
-      const apiResponse = await fetch(
-        `${import.meta.env.VITE_API_URL}/auth/google`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            token: response.credential,
-          }),
-        }
-      );
+      // Usar o serviço de autenticação para fazer login com Google
+      await loginWithGoogle(response.credential);
 
-      if (!apiResponse.ok) {
-        throw new Error("Falha na autenticação");
-      }
-
-      const data = await apiResponse.json();
-
-      // Salvar token JWT no localStorage
-      localStorage.setItem("token", data.token);
-
-      toast.success(`Bem-vindo(a), ${data.nome}!`, {
-        description: "Login realizado com sucesso",
+      toast.success("Login realizado com sucesso!", {
+        description: "Bem-vindo(a) de volta!",
       });
 
       navigate("/dashboard");
@@ -94,7 +76,9 @@ export function GoogleLoginButton() {
       console.error("Erro ao fazer login com Google:", error);
       toast.error("Erro ao fazer login", {
         description:
-          "Não foi possível autenticar com o Google. Tente novamente.",
+          error instanceof Error
+            ? error.message
+            : "Não foi possível autenticar com o Google. Tente novamente.",
       });
     } finally {
       setIsLoading(false);
