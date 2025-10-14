@@ -17,9 +17,11 @@ interface UserState {
   isAuthenticated: boolean;
   token: string | null; // Armazena credenciais Basic Auth (Base64)
   isLoading: boolean;
+  isHydrated: boolean; // Indica se o estado foi restaurado do localStorage
   setUser: (user: UserState["user"]) => void;
   setToken: (token: string | null) => void;
   setLoading: (loading: boolean) => void;
+  setHydrated: (hydrated: boolean) => void;
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: (googleToken: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -34,6 +36,7 @@ export const useUserStore = create<UserState>()(
         isAuthenticated: false,
         token: null,
         isLoading: false,
+        isHydrated: false,
 
         setUser: (user) => {
           const isAuthenticated = !!user;
@@ -46,6 +49,8 @@ export const useUserStore = create<UserState>()(
         },
 
         setLoading: (isLoading) => set({ isLoading }, false, "setLoading"),
+
+        setHydrated: (isHydrated) => set({ isHydrated }, false, "setHydrated"),
 
         // Fazer login com JWT
         login: async (email: string, password: string) => {
@@ -156,23 +161,37 @@ export const useUserStore = create<UserState>()(
       }),
       {
         name: "user-store",
-        // Não persistir isLoading
+        // Não persistir isLoading e isHydrated
         partialize: (state) => ({
           user: state.user,
           isAuthenticated: state.isAuthenticated,
           token: state.token,
         }),
+        onRehydrateStorage: () => (state) => {
+          // Marcar como hidratado após restaurar do localStorage
+          if (state) {
+            state.setHydrated(true);
+          }
+        },
       }
     ),
     { name: "user-store" }
   )
 );
 
-// Inicializar verificação de autenticação
-// DESABILITADO TEMPORARIAMENTE - causando conflito com login
-// if (typeof window !== "undefined") {
-//   setTimeout(() => {
-//     const store = useUserStore.getState();
-//     store.validateToken();
-//   }, 100);
-// }
+// Inicializar verificação de autenticação ao carregar a aplicação
+if (typeof window !== "undefined") {
+  const token = localStorage.getItem("token");
+  const usuarioData = localStorage.getItem("usuario");
+
+  // Só validar se houver dados no localStorage
+  if (token && usuarioData) {
+    setTimeout(() => {
+      const store = useUserStore.getState();
+      store.validateToken();
+    }, 0); // Executar imediatamente no próximo tick
+  } else {
+    // Se não houver dados, marcar como hidratado imediatamente
+    useUserStore.getState().setHydrated(true);
+  }
+}

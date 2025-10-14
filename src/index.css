@@ -121,7 +121,7 @@
       transform: translateY(0px);
     }
     50% {
-      transform: translateY(-10px);
+      transform: translateY(-30px);
     }
   }
 
@@ -131,16 +131,26 @@
       transform: translateY(0px);
     }
     50% {
-      transform: translateY(-15px);
+      transform: translateY(-40px);
     }
   }
 
   .animate-float {
-    animation: float 3s ease-in-out infinite;
+    animation: float 4s ease-in-out infinite;
   }
 
   .animate-float-delayed {
-    animation: float-delayed 3s ease-in-out infinite;
+    animation: float-delayed 4s ease-in-out infinite;
     animation-delay: 0.5s;
+  }
+
+  /* Grid pattern for login page */
+  .bg-grid-white\/10 {
+    background-image: linear-gradient(
+        rgba(255, 255, 255, 0.1) 1px,
+        transparent 1px
+      ),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
   }
 }

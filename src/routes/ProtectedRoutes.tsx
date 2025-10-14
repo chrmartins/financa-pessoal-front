@@ -18,6 +18,11 @@ const Categorias = lazy(() =>
     default: module.CategoriasPage,
   }))
 );
+const Relatorios = lazy(() =>
+  import("@/pages/relatorios").then((module) => ({
+    default: module.RelatoriosPage,
+  }))
+);
 const Usuarios = lazy(() => import("@/pages/usuarios"));
 const NotFound = lazy(() => import("@/pages/404"));
 
@@ -29,7 +34,6 @@ const withProtectedLayout = (element: React.ReactNode) => (
 );
 
 export const protectedRoutes = [
-  <Route key="root" path="/" element={withProtectedLayout(<Dashboard />)} />,
   <Route
     key="dashboard"
     path="/dashboard"
@@ -44,6 +48,11 @@ export const protectedRoutes = [
     key="categorias"
     path="/categorias"
     element={withProtectedLayout(<Categorias />)}
+  />,
+  <Route
+    key="relatorios"
+    path="/relatorios"
+    element={withProtectedLayout(<Relatorios />)}
   />,
   <Route
     key="usuarios"

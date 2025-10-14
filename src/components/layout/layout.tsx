@@ -35,7 +35,7 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   {
     title: "Dashboard",
-    href: "/",
+    href: "/dashboard",
     icon: Home,
   },
   {
@@ -69,7 +69,7 @@ const menuItems: MenuItem[] = [
 // Função para obter título e descrição baseado na rota
 function getPageInfo(pathname: string) {
   const routes = {
-    "/": {
+    "/dashboard": {
       title: "Dashboard",
       description: "Gerencie suas finanças pessoais",
     },
@@ -95,7 +95,7 @@ function getPageInfo(pathname: string) {
     },
   };
 
-  return routes[pathname as keyof typeof routes] || routes["/"];
+  return routes[pathname as keyof typeof routes] || routes["/dashboard"];
 }
 
 // Componente para exibir perfil do usuário

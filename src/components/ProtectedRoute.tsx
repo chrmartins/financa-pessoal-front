@@ -14,8 +14,14 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { isAuthenticated, isLoading } = useUserStore();
   const location = useLocation();
 
-  // Mostrar loading enquanto valida token
-  if (isLoading) {
+  // Verificar se há token no localStorage como fallback
+  const hasToken =
+    typeof window !== "undefined" &&
+    localStorage.getItem("token") !== null &&
+    localStorage.getItem("usuario") !== null;
+
+  // Mostrar loading enquanto valida token ou se houver token mas ainda não autenticado
+  if (isLoading || (hasToken && !isAuthenticated)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -28,8 +34,8 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     );
   }
 
-  // Se não está autenticado, redireciona para login
-  if (!isAuthenticated) {
+  // Se não está autenticado E não tem token, redireciona para login
+  if (!isAuthenticated && !hasToken) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
