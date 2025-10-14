@@ -32,8 +32,10 @@ export function ComparisonChart({ data }: ComparisonChartProps) {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-4 shadow-xl">
-          <p className="text-white font-semibold mb-2">{label}</p>
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 shadow-xl">
+          <p className="text-gray-900 dark:text-white font-semibold mb-2">
+            {label}
+          </p>
           {payload.map((entry: any, index: number) => (
             <p key={index} style={{ color: entry.color }} className="text-sm">
               {entry.name}: {formatCurrency(entry.value)}
@@ -46,8 +48,8 @@ export function ComparisonChart({ data }: ComparisonChartProps) {
   };
 
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-      <h3 className="text-xl font-semibold text-white mb-6">
+    <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6">
+      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
         Comparação: Mês Atual vs Mês Anterior
       </h3>
 

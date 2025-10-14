@@ -65,7 +65,7 @@ export function SummaryCards({ data }: SummaryCardsProps) {
         return (
           <div
             key={index}
-            className="bg-slate-800/50 border border-slate-700 rounded-xl p-6 hover:border-purple-500/50 transition"
+            className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6 hover:border-purple-500/50 transition"
           >
             <div className="flex items-start justify-between mb-4">
               <div
@@ -82,8 +82,10 @@ export function SummaryCards({ data }: SummaryCardsProps) {
               </div>
             </div>
 
-            <h3 className="text-slate-400 text-sm mb-1">{card.title}</h3>
-            <p className="text-2xl font-bold text-white">
+            <h3 className="text-gray-600 dark:text-slate-400 text-sm mb-1">
+              {card.title}
+            </h3>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
               {formatCurrency(card.value)}
             </p>
           </div>

@@ -22,10 +22,14 @@ export function ExpensesByCategory({ data }: ExpensesByCategoryProps) {
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-slate-800 border border-slate-700 rounded-lg p-3 shadow-xl">
-          <p className="text-white font-semibold">{payload[0].name}</p>
-          <p className="text-slate-300">{formatCurrency(payload[0].value)}</p>
-          <p className="text-slate-400 text-sm">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 shadow-xl">
+          <p className="text-gray-900 dark:text-white font-semibold">
+            {payload[0].name}
+          </p>
+          <p className="text-gray-700 dark:text-slate-300">
+            {formatCurrency(payload[0].value)}
+          </p>
+          <p className="text-gray-600 dark:text-slate-400 text-sm">
             {(
               (payload[0].value /
                 data.reduce((sum, item) => sum + item.value, 0)) *
@@ -40,8 +44,8 @@ export function ExpensesByCategory({ data }: ExpensesByCategoryProps) {
   };
 
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
-      <h3 className="text-xl font-semibold text-white mb-6">
+    <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6">
+      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
         Despesas por Categoria
       </h3>
 
@@ -76,9 +80,11 @@ export function ExpensesByCategory({ data }: ExpensesByCategoryProps) {
                 className="w-4 h-4 rounded-full"
                 style={{ backgroundColor: category.color }}
               />
-              <span className="text-slate-300">{category.name}</span>
+              <span className="text-gray-700 dark:text-slate-300">
+                {category.name}
+              </span>
             </div>
-            <span className="text-white font-semibold">
+            <span className="text-gray-900 dark:text-white font-semibold">
               {formatCurrency(category.value)}
             </span>
           </div>

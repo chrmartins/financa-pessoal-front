@@ -11,7 +11,7 @@ export function Footer() {
               <Logo />
             </Link>
             <p className="text-slate-400 text-sm">
-              Controle financeiro simples e eficiente para todos os brasileiros.
+              Controle financeiro simples e eficiente para todos.
             </p>
           </div>
 

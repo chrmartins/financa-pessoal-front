@@ -29,10 +29,12 @@ export function TopExpenses({ data }: TopExpensesProps) {
   };
 
   return (
-    <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-6">
+    <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-semibold text-white">Maiores Despesas</h3>
-        <div className="flex items-center space-x-2 text-slate-400">
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+          Maiores Despesas
+        </h3>
+        <div className="flex items-center space-x-2 text-gray-600 dark:text-slate-400">
           <ArrowDown className="w-4 h-4 text-red-400" />
           <span className="text-sm">Top 10</span>
         </div>
@@ -42,22 +44,22 @@ export function TopExpenses({ data }: TopExpensesProps) {
         {data.map((expense, index) => (
           <div
             key={expense.id}
-            className="flex items-center justify-between p-4 bg-slate-900/50 rounded-lg hover:bg-slate-900/80 transition"
+            className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-900/80 transition"
           >
             {/* Esquerda: Ranking + Info */}
             <div className="flex items-center space-x-4 flex-1">
               {/* Número do ranking */}
-              <div className="flex items-center justify-center w-8 h-8 bg-slate-700 rounded-full text-white font-bold text-sm">
+              <div className="flex items-center justify-center w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-full text-gray-900 dark:text-white font-bold text-sm">
                 {index + 1}
               </div>
 
               {/* Informações */}
               <div className="flex-1 min-w-0">
-                <p className="text-white font-medium truncate">
+                <p className="text-gray-900 dark:text-white font-medium truncate">
                   {expense.description}
                 </p>
                 <div className="flex items-center space-x-4 mt-1">
-                  <div className="flex items-center space-x-1 text-slate-400 text-sm">
+                  <div className="flex items-center space-x-1 text-gray-600 dark:text-slate-400 text-sm">
                     <Tag className="w-3 h-3" />
                     <span
                       className="truncate max-w-[120px]"
@@ -66,7 +68,7 @@ export function TopExpenses({ data }: TopExpensesProps) {
                       {expense.category}
                     </span>
                   </div>
-                  <div className="flex items-center space-x-1 text-slate-400 text-sm">
+                  <div className="flex items-center space-x-1 text-gray-600 dark:text-slate-400 text-sm">
                     <Calendar className="w-3 h-3" />
                     <span>{formatDate(expense.date)}</span>
                   </div>
@@ -85,7 +87,7 @@ export function TopExpenses({ data }: TopExpensesProps) {
       </div>
 
       {data.length === 0 && (
-        <div className="text-center py-12 text-slate-400">
+        <div className="text-center py-12 text-gray-600 dark:text-slate-400">
           <ArrowDown className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p>Nenhuma despesa encontrada neste período</p>
         </div>

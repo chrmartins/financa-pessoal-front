@@ -139,7 +139,7 @@ export function RelatoriosPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 p-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header com filtros */}
         <ReportHeader
@@ -166,8 +166,8 @@ export function RelatoriosPage() {
         <TopExpenses data={mockTopExpenses} />
 
         {/* Footer com informações */}
-        <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6">
-          <div className="flex items-center justify-between text-sm text-slate-400">
+        <div className="bg-slate-100 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/50 rounded-xl p-6">
+          <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400">
             <p>
               📊 Relatório gerado em{" "}
               {new Date().toLocaleDateString("pt-BR", {
