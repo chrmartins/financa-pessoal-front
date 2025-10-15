@@ -324,6 +324,30 @@ export const transacaoService = {
    */
 
   /**
+   * ✅ NOVO: Preview de transações FIXA futuras (calculadas on-the-fly)
+   * Retorna transações que ainda não foram criadas no banco pelo JOB
+   * Útil quando usuário navega para meses distantes
+   */
+  preview: async (mes: number, ano: number): Promise<TransacaoResponse[]> => {
+    try {
+      const response: AxiosResponse<TransacaoResponse[]> = await api.get(
+        "/transacoes/preview",
+        {
+          params: { mes, ano },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("❌ Erro ao buscar preview de transações:", error);
+      // Se o endpoint não existir ainda, retorna array vazio
+      if (isAxiosError(error) && error.response?.status === 404) {
+        return [];
+      }
+      throw error;
+    }
+  },
+
+  /**
    * Listar transações recorrentes ativas
    */
   listRecorrentes: async (): Promise<TransacaoResponse[]> => {

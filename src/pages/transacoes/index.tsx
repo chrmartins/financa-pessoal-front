@@ -1,30 +1,14 @@
-import { TransacaoModal } from "@/components/transacaoModal";
 import { Button } from "@/components/ui/button";
 import { useMonthSelector } from "@/hooks/use-month-selector";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTransacoesList } from "../../hooks/queries/transacoes/use-transacoes-list";
+import { useTransacoesPreview } from "../../hooks/queries/transacoes/use-transacoes-preview";
 import { TransacoesList } from "./components/TransacoesList";
 
 export function Transacoes() {
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [shouldNavigate, setShouldNavigate] = useState(false);
   const navigate = useNavigate();
-
-  const handleCloseModal = () => {
-    setCreateModalOpen(false);
-    // Marcar que deve navegar após fechar
-    setShouldNavigate(true);
-  };
-
-  // Navegar para dashboard após modal fechar
-  useEffect(() => {
-    if (shouldNavigate && !createModalOpen) {
-      navigate("/");
-      setShouldNavigate(false);
-    }
-  }, [shouldNavigate, createModalOpen, navigate]);
 
   // Hook para gerenciar seleção de mês
   const {
@@ -35,17 +19,49 @@ export function Transacoes() {
     goToNextMonth,
     goToCurrentMonth,
     isCurrentMonth,
+    selectedMonth,
+    selectedYear,
   } = useMonthSelector();
 
-  // Buscar transações do mês selecionado
-  const { data, isLoading } = useTransacoesList({
+  // Buscar transações do mês selecionado (dados reais do banco)
+  const { data, isLoading: isLoadingReal } = useTransacoesList({
     dataInicio,
     dataFim,
     size: 1000, // Buscar todas as transações do mês
   });
 
-  // Transações já vêm ordenadas do serviço (mais recente primeiro)
-  const transacoesOrdenadas = data?.content || [];
+  // Buscar preview de transações FIXA futuras (apenas para meses distantes)
+  // selectedMonth é 0-11, mas API espera 1-12
+  const { data: previewData, isLoading: isLoadingPreview } =
+    useTransacoesPreview(selectedMonth + 1, selectedYear);
+
+  // Combinar transações reais + preview (remover duplicatas)
+  const transacoesOrdenadas = useMemo(() => {
+    const transacoesReais = data?.content || [];
+    const transacoesPreview = previewData || [];
+
+    // Se não há preview, retorna apenas as reais
+    if (transacoesPreview.length === 0) {
+      return transacoesReais;
+    }
+
+    // Combinar: transações reais + previews (apenas as que não existem no banco)
+    const idsReais = new Set(transacoesReais.map((t) => t.id));
+    const previewsFiltradas = transacoesPreview.filter(
+      (t) => !t.id || !idsReais.has(t.id)
+    );
+
+    const combinadas = [...transacoesReais, ...previewsFiltradas];
+
+    // Ordenar por data (mais recente primeiro)
+    return combinadas.sort((a, b) => {
+      const dateA = new Date(a.dataTransacao).getTime();
+      const dateB = new Date(b.dataTransacao).getTime();
+      return dateB - dateA;
+    });
+  }, [data?.content, previewData]);
+
+  const isLoading = isLoadingReal || isLoadingPreview;
 
   return (
     <div className="space-y-6">
@@ -94,7 +110,7 @@ export function Transacoes() {
 
         {/* Botão nova transação */}
         <Button
-          onClick={() => setCreateModalOpen(true)}
+          onClick={() => navigate("/transacoes/nova")}
           className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -104,9 +120,6 @@ export function Transacoes() {
 
       {/* Lista de transações */}
       <TransacoesList transacoes={transacoesOrdenadas} isLoading={isLoading} />
-
-      {/* Modal para criar transação */}
-      <TransacaoModal open={createModalOpen} onClose={handleCloseModal} />
     </div>
   );
 }

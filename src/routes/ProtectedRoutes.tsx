@@ -13,6 +13,11 @@ const Transacoes = lazy(() =>
     default: module.Transacoes,
   }))
 );
+const TransacaoForm = lazy(() =>
+  import("@/pages/transacao-form").then((module) => ({
+    default: module.TransacaoFormPage,
+  }))
+);
 const Categorias = lazy(() =>
   import("@/pages/categorias").then((module) => ({
     default: module.CategoriasPage,
@@ -43,6 +48,16 @@ export const protectedRoutes = [
     key="transacoes"
     path="/transacoes"
     element={withProtectedLayout(<Transacoes />)}
+  />,
+  <Route
+    key="nova-transacao"
+    path="/transacoes/nova"
+    element={withProtectedLayout(<TransacaoForm />)}
+  />,
+  <Route
+    key="editar-transacao"
+    path="/transacoes/:id/editar"
+    element={withProtectedLayout(<TransacaoForm />)}
   />,
   <Route
     key="categorias"

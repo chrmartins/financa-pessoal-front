@@ -79,9 +79,15 @@ export interface CreateTransacaoRequest {
   observacoes?: string;
   // Campos para transações recorrentes
   recorrente: boolean;
-  quantidadeParcelas?: number; // Quantas vezes se repete (2x, 3x, etc)
-  tipoRecorrencia?: "MENSAL"; // Sempre mensal por padrão
-  valorTotalOriginal?: number; // Calculado automaticamente (valor × quantidade)
+  tipoRecorrencia?: "PARCELADA" | "FIXA"; // PARCELADA (com fim) ou FIXA (infinita)
+  quantidadeParcelas?: number; // Usado quando tipoRecorrencia = PARCELADA
+  frequencia?:
+    | "DIARIO"
+    | "SEMANAL"
+    | "QUINZENAL"
+    | "MENSAL"
+    | "SEMESTRAL"
+    | "ANUAL"; // Usado quando tipoRecorrencia = FIXA
 }
 
 export interface UpdateTransacaoRequest {
@@ -91,8 +97,21 @@ export interface UpdateTransacaoRequest {
   tipo?: "RECEITA" | "DESPESA";
   categoriaId?: string; // UUID string como no banco real
   observacoes?: string;
-  // Para recorrentes, permitir atualizar apenas a transação atual ou todas
-  atualizarTodasRecorrencias?: boolean;
+  // Campos para transações recorrentes
+  recorrente?: boolean;
+  tipoRecorrencia?: "PARCELADA" | "FIXA";
+  quantidadeParcelas?: number;
+  frequencia?:
+    | "DIARIO"
+    | "SEMANAL"
+    | "QUINZENAL"
+    | "MENSAL"
+    | "SEMESTRAL"
+    | "ANUAL";
+  // Define como aplicar a edição em transações FIXA
+  escopoEdicao?: "APENAS_ESTA" | "DESTA_DATA_EM_DIANTE" | "TODAS";
+  // Se true, deleta ocorrências futuras ao converter FIXA → ÚNICA
+  deletarOcorrenciasFuturas?: boolean;
 }
 
 // Tipos para resposta da API
@@ -110,7 +129,7 @@ export interface CategoriaResponse {
 }
 
 export interface TransacaoResponse {
-  id: string; // UUID string
+  id: string | null; // UUID string ou null para previsões
   descricao: string;
   valor: number;
   dataTransacao: string;
@@ -123,11 +142,19 @@ export interface TransacaoResponse {
   dataAtualizacao?: string;
   // Campos para transações recorrentes
   recorrente: boolean;
-  quantidadeParcelas?: number; // Quantas vezes se repete (2x, 3x, etc)
+  tipoRecorrencia?: "PARCELADA" | "FIXA"; // PARCELADA (com fim) ou FIXA (infinita)
+  quantidadeParcelas?: number; // Usado quando tipoRecorrencia = PARCELADA
   parcelaAtual?: number; // Qual parcela atual (1, 2, 3...)
+  frequencia?:
+    | "DIARIO"
+    | "SEMANAL"
+    | "QUINZENAL"
+    | "MENSAL"
+    | "SEMESTRAL"
+    | "ANUAL"; // Usado quando tipoRecorrencia = FIXA
   transacaoPaiId?: string; // ID da transação original que gerou as recorrentes
-  valorTotal?: number; // Valor total (valor × quantidade)
-  tipoRecorrencia?: "MENSAL"; // Sempre mensal
+  transacaoOrigemId?: string; // ID da transação origem (para transações FIXA)
+  ativa?: boolean; // Se a transação fixa está ativa ou foi cancelada
 }
 
 // Tipos para filtros e paginação

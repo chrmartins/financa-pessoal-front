@@ -28,6 +28,13 @@ export function DeleteTransacaoModal({
   const handleDelete = async () => {
     if (!transacao) return;
 
+    // Prevenção adicional: não deletar se for preview (id null)
+    if (!transacao.id) {
+      console.error("❌ Tentativa de deletar transação sem ID (preview)");
+      onClose();
+      return;
+    }
+
     try {
       await deleteTransacao.mutateAsync(transacao.id);
       onClose();

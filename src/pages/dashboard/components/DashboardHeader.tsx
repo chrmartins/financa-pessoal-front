@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { useModalStore } from "@/stores/modals/use-modal-store";
 import { ChevronLeft, ChevronRight, Plus, RotateCcw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardHeaderProps {
   formattedMonth: string;
@@ -20,7 +20,7 @@ export function DashboardHeader({
   isCurrentMonth,
   isLoadingMonth = false,
 }: DashboardHeaderProps) {
-  const { setCreateTransacaoOpen } = useModalStore();
+  const navigate = useNavigate();
 
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -74,7 +74,7 @@ export function DashboardHeader({
         <Button
           variant="gradient"
           className="flex-1 sm:flex-none"
-          onClick={() => setCreateTransacaoOpen(true)}
+          onClick={() => navigate("/transacoes/nova")}
         >
           <Plus className="h-4 w-4 mr-2" />
           Nova Transação

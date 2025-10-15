@@ -1,6 +1,4 @@
-import { TransacaoModal } from "@/components/transacaoModal";
 import { useMonthSelector } from "@/hooks/use-month-selector";
-import { useModalStore } from "@/stores/modals/use-modal-store";
 import { useResumoFinanceiro } from "../../hooks/queries/resumo-financeiro/use-resumo-financeiro";
 import { useTransacoesList } from "../../hooks/queries/transacoes/use-transacoes-list";
 import { DashboardHeader } from "./components/DashboardHeader";
@@ -9,8 +7,6 @@ import { SummaryCards } from "./components/SummaryCards";
 import { TrendChart } from "./components/TrendChart";
 
 export function Dashboard() {
-  const { createTransacaoOpen, setCreateTransacaoOpen } = useModalStore();
-
   // Hook para gerenciar seleção de mês
   const {
     dataInicio,
@@ -83,11 +79,6 @@ export function Dashboard() {
           isLoading={loadingRecentes}
         />
       </div>
-
-      <TransacaoModal
-        open={createTransacaoOpen}
-        onClose={() => setCreateTransacaoOpen(false)}
-      />
     </div>
   );
 }
