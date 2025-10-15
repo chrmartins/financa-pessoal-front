@@ -110,7 +110,7 @@ export function useTrendData(options?: { enabled?: boolean }): {
         transacoesDoMes.length > 0
           ? calcularResumoFinanceiro(
               transacoesDoMes.map((t) => ({
-                id: t.id,
+                id: t.id || "preview", // Converter null para string para preview
                 tipo: t.tipo,
                 valor: t.valor,
                 dataTransacao: t.dataTransacao,

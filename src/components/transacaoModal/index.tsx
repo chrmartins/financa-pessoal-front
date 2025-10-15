@@ -225,11 +225,7 @@ export function TransacaoModal({
       recorrente: isEditing ? false : data.recorrente,
       quantidadeParcelas:
         !isEditing && data.recorrente ? data.quantidadeParcelas : undefined,
-      tipoRecorrencia: !isEditing && data.recorrente ? "MENSAL" : undefined,
-      valorTotalOriginal:
-        !isEditing && data.recorrente
-          ? valorNumerico * data.quantidadeParcelas
-          : undefined,
+      tipoRecorrencia: !isEditing && data.recorrente ? "FIXA" : undefined,
     };
 
     // Debug: verificar dados enviados para transação recorrente
@@ -240,7 +236,6 @@ export function TransacaoModal({
         recorrente: requestData.recorrente,
         quantidadeParcelas: requestData.quantidadeParcelas,
         tipoRecorrencia: requestData.tipoRecorrencia,
-        valorTotalOriginal: requestData.valorTotalOriginal,
       });
     }
 
