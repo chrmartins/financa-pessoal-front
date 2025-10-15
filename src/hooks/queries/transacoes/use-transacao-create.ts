@@ -1,8 +1,8 @@
 import type { TransacaoListResponse } from "@/services/transacoes/transacao-service";
 import { transacaoService } from "@/services/transacoes/transacao-service";
+import { useUserStore } from "@/stores/auth/use-user-store";
 import type { CreateTransacaoRequest, TransacaoResponse } from "@/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useUserStore } from "@/stores/auth/use-user-store";
 
 /**
  * Opções para o hook de criação de transações
@@ -24,7 +24,6 @@ export function useTransacaoCreate(options?: UseTransacaoCreateOptions) {
       return transacaoService.create(data);
     },
     onSuccess: async (data) => {
-
       // WORKAROUND: Atualizar cache manualmente já que backend retorna lista vazia
       // Adicionar a nova transação no cache de todas as queries de lista
       queryClient.setQueriesData<TransacaoListResponse>(
@@ -52,6 +51,16 @@ export function useTransacaoCreate(options?: UseTransacaoCreateOptions) {
       // NÃO invalidar transacoes-list para manter cache local
       // Quando backend for corrigido, remover o workaround acima e descomentar linha abaixo:
       // await queryClient.invalidateQueries({ queryKey: ["transacoes-list", userId], exact: false });
+
+      // ✅ Invalidar queries de preview (para transações FIXA recém-criadas)
+      await queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = query.queryKey;
+          return (
+            Array.isArray(queryKey) && queryKey[0] === "transacoes-preview"
+          );
+        },
+      });
 
       // Invalidar resumo financeiro (incluindo userId na chave)
       await queryClient.invalidateQueries({

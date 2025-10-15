@@ -112,11 +112,12 @@ export function TransacoesList({
           <Card className="bg-white dark:bg-gray-800/95 border border-gray-300 dark:border-gray-700/50 shadow-md">
             <CardContent className="p-0">
               <div className="divide-y divide-gray-200 dark:divide-gray-700/50">
-                {transacoes.map((transacao) => {
+                {transacoes.map((transacao, index) => {
                   const isPrev = isPreview(transacao);
+                  // Garantir key única: usar ID ou combinar origem+data+índice para previews
                   const uniqueKey =
                     transacao.id ||
-                    `preview-${transacao.transacaoOrigemId}-${transacao.dataTransacao}`;
+                    `preview-${transacao.transacaoOrigemId}-${transacao.dataTransacao}-${index}`;
 
                   return (
                     <div

@@ -20,6 +20,16 @@ export function useTransacaoUpdate() {
         },
       });
 
+      // ✅ Invalida queries de preview (para transações FIXA futuras)
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = query.queryKey;
+          return (
+            Array.isArray(queryKey) && queryKey[0] === "transacoes-preview"
+          );
+        },
+      });
+
       // Invalida transação específica
       queryClient.invalidateQueries({
         queryKey: ["transacao-detail", variables.id],

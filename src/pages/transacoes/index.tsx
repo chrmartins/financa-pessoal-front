@@ -7,6 +7,24 @@ import { useTransacoesList } from "../../hooks/queries/transacoes/use-transacoes
 import { useTransacoesPreview } from "../../hooks/queries/transacoes/use-transacoes-preview";
 import { TransacoesList } from "./components/TransacoesList";
 
+/**
+ * Verifica se o mês/ano está APÓS 12 meses do mês atual
+ * (mesma lógica do hook, para garantir consistência)
+ * @param mes - Mês no formato 0-11 (JavaScript Date)
+ * @param ano - Ano completo (ex: 2025)
+ */
+function shouldShowPreview(mes: number, ano: number): boolean {
+  const hoje = new Date();
+  const anoAtual = hoje.getFullYear();
+  const mesAtual = hoje.getMonth(); // 0-11
+
+  // mes já vem como 0-11 (selectedMonth), usar direto
+  const dataAlvo = new Date(ano, mes, 1);
+  const dataLimite12Meses = new Date(anoAtual, mesAtual + 12, 1);
+
+  return dataAlvo >= dataLimite12Meses;
+}
+
 export function Transacoes() {
   const navigate = useNavigate();
 
@@ -35,10 +53,15 @@ export function Transacoes() {
   const { data: previewData, isLoading: isLoadingPreview } =
     useTransacoesPreview(selectedMonth + 1, selectedYear);
 
+  // Verificar se devemos mostrar preview neste mês
+  const deveExibirPreview = shouldShowPreview(selectedMonth, selectedYear);
+
   // Combinar transações reais + preview (remover duplicatas)
   const transacoesOrdenadas = useMemo(() => {
     const transacoesReais = data?.content || [];
-    const transacoesPreview = previewData || [];
+
+    // PROTEÇÃO: Só usa preview se estiver no período correto (12+ meses)
+    const transacoesPreview = (deveExibirPreview ? previewData : []) || [];
 
     // Se não há preview, retorna apenas as reais
     if (transacoesPreview.length === 0) {
@@ -46,10 +69,30 @@ export function Transacoes() {
     }
 
     // Combinar: transações reais + previews (apenas as que não existem no banco)
-    const idsReais = new Set(transacoesReais.map((t) => t.id));
-    const previewsFiltradas = transacoesPreview.filter(
-      (t) => !t.id || !idsReais.has(t.id)
+    // Previews têm id === null, então não haverá conflito com IDs reais
+    const idsReais = new Set(
+      transacoesReais
+        .filter((t) => t.id != null) // Garantir que só IDs válidos entram no Set
+        .map((t) => t.id)
     );
+
+    // Filtrar previews: só adiciona se não existir transação real com mesmo ID
+    // Como previews têm id=null, precisamos também verificar por descrição+valor+data
+    const previewsFiltradas = transacoesPreview.filter((preview) => {
+      // Se preview tem ID (não deveria), verificar se não existe no banco
+      if (preview.id && idsReais.has(preview.id)) {
+        return false;
+      }
+
+      // Verificar duplicação por descrição + valor + data (mesma transação)
+      const previewKey = `${preview.descricao}-${preview.valor}-${preview.dataTransacao}`;
+      const existeReal = transacoesReais.some((real) => {
+        const realKey = `${real.descricao}-${real.valor}-${real.dataTransacao}`;
+        return realKey === previewKey;
+      });
+
+      return !existeReal;
+    });
 
     const combinadas = [...transacoesReais, ...previewsFiltradas];
 
@@ -59,7 +102,7 @@ export function Transacoes() {
       const dateB = new Date(b.dataTransacao).getTime();
       return dateB - dateA;
     });
-  }, [data?.content, previewData]);
+  }, [data?.content, previewData, deveExibirPreview]);
 
   const isLoading = isLoadingReal || isLoadingPreview;
 
