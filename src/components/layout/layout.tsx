@@ -16,7 +16,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast, Toaster } from "sonner";
 import { Logo } from "./logo.tsx";
@@ -210,10 +210,26 @@ function UserProfile() {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const { sidebarOpen, toggleSidebar, isMobile } = useUIStore();
+  const { sidebarOpen, toggleSidebar, isMobile, setIsMobile } = useUIStore();
   const { user } = useUserStore();
   const location = useLocation();
   const pageInfo = getPageInfo(location.pathname);
+
+  // Detectar se está em modo mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024); // lg breakpoint
+    };
+
+    // Verificar na montagem
+    checkMobile();
+
+    // Adicionar listener para resize
+    window.addEventListener("resize", checkMobile);
+
+    // Cleanup
+    return () => window.removeEventListener("resize", checkMobile);
+  }, [setIsMobile]);
 
   // Filtrar itens do menu baseado no papel do usuário
   const filteredMenuItems = menuItems.filter((item) => {
