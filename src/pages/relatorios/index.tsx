@@ -10,6 +10,7 @@ import { useState } from "react";
 import {
   ComparisonChart,
   ExpensesByCategory,
+  ExportButton,
   MonthlyTrend,
   PeriodDialog,
   ReportHeader,
@@ -94,10 +95,20 @@ export function RelatoriosPage() {
     setCustomPeriodLabel(`${formatDate(dataInicio)} - ${formatDate(dataFim)}`);
   };
 
-  const handleExport = () => {
-    // Implementar lógica de exportação (PDF, Excel, CSV)
-    console.log("Exportando relatório...");
-    alert("Funcionalidade de exportação em desenvolvimento!");
+  // Preparar label do período para exportação
+  const getPeriodoLabel = () => {
+    if (periodoSelecionado === "custom" && customPeriodLabel) {
+      return customPeriodLabel;
+    }
+
+    const labels = {
+      month: "Este Mês",
+      quarter: "Trimestre",
+      year: "Este Ano",
+      custom: "Período Personalizado",
+    };
+
+    return labels[periodoSelecionado];
   };
 
   return (
@@ -108,8 +119,18 @@ export function RelatoriosPage() {
           selectedPeriod={periodoSelecionado}
           onPeriodChange={handlePeriodChange}
           onOpenPeriodDialog={() => setPeriodDialogOpen(true)}
-          onExport={handleExport}
           customPeriodLabel={customPeriodLabel}
+          exportButton={
+            <ExportButton
+              periodo={getPeriodoLabel()}
+              metricas={metricas}
+              categorias={categoryData}
+              topDespesas={topExpensesData}
+              disabled={
+                isLoadingMetricas || isLoadingCategory || isLoadingTopExpenses
+              }
+            />
+          }
         />
 
         {/* Cards de resumo - DADOS REAIS */}

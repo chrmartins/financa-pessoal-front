@@ -1,20 +1,21 @@
 import type { PeriodoType } from "@/hooks/queries/transacoes/use-period-metrics";
-import { Calendar, Download } from "lucide-react";
+import { Calendar } from "lucide-react";
+import type { ReactNode } from "react";
 
 interface ReportHeaderProps {
   selectedPeriod: PeriodoType;
   onPeriodChange: (period: PeriodoType) => void;
   onOpenPeriodDialog: () => void;
-  onExport: () => void;
   customPeriodLabel?: string; // Label personalizado quando período custom está ativo
+  exportButton?: ReactNode; // Botão de exportação passado como prop
 }
 
 export function ReportHeader({
   selectedPeriod,
   onPeriodChange,
   onOpenPeriodDialog,
-  onExport,
   customPeriodLabel,
+  exportButton,
 }: ReportHeaderProps) {
   const periods = [
     { value: "month" as PeriodoType, label: "Este Mês" },
@@ -77,13 +78,7 @@ export function ReportHeader({
               </span>
             </button>
 
-            <button
-              onClick={onExport}
-              className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition"
-            >
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">Exportar</span>
-            </button>
+            {exportButton}
           </div>
         </div>
       </div>
