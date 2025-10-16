@@ -122,16 +122,16 @@ export function TransacoesList({
                   return (
                     <div
                       key={uniqueKey}
-                      className={`flex items-center justify-between p-3 sm:p-4 md:p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors gap-2 ${
+                      className={`flex items-center justify-between p-2 sm:p-3 md:p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors gap-2 ${
                         isPrev
                           ? "opacity-70 border-l-4 border-amber-500 dark:border-amber-600 bg-amber-50/30 dark:bg-amber-900/10"
                           : ""
                       }`}
                     >
-                      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                        <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                      <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+                        <div className="flex flex-col items-center gap-1 flex-shrink-0">
                           <div
-                            className={`p-2 rounded-lg ${
+                            className={`p-1.5 rounded-lg ${
                               transacao.tipo === "RECEITA"
                                 ? "bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400"
                                 : "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400"
@@ -186,7 +186,7 @@ export function TransacoesList({
                       <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                         <div className="text-right">
                           <p
-                            className={`font-bold text-sm sm:text-base md:text-lg whitespace-nowrap ${
+                            className={`font-semibold text-sm whitespace-nowrap ${
                               transacao.tipo === "RECEITA"
                                 ? "text-green-600 dark:text-green-400"
                                 : "text-red-600 dark:text-red-400"

@@ -268,6 +268,12 @@ export function Layout({ children }: LayoutProps) {
                 <Link
                   key={item.href}
                   to={item.href}
+                  onClick={() => {
+                    // Fecha a sidebar no mobile ao clicar em um item
+                    if (isMobile && sidebarOpen) {
+                      toggleSidebar();
+                    }
+                  }}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 group",
                     isActive
