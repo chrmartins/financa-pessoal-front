@@ -1,3 +1,4 @@
+import { useComparisonData } from "@/hooks/queries/transacoes/use-comparison-data";
 import {
   ComparisonChart,
   ExpensesByCategory,
@@ -31,14 +32,6 @@ const mockMonthlyData = [
   { month: "Ago", receitas: 4900, despesas: 3300, saldo: 1600 },
   { month: "Set", receitas: 5100, despesas: 3500, saldo: 1600 },
   { month: "Out", receitas: 5000, despesas: 3500, saldo: 1500 },
-];
-
-const mockComparisonData = [
-  { category: "Alimentação", mesAnterior: 1100, mesAtual: 1200 },
-  { category: "Transporte", mesAnterior: 750, mesAtual: 800 },
-  { category: "Moradia", mesAnterior: 600, mesAtual: 600 },
-  { category: "Lazer", mesAnterior: 500, mesAtual: 400 },
-  { category: "Saúde", mesAnterior: 250, mesAtual: 300 },
 ];
 
 const mockTopExpenses = [
@@ -125,6 +118,18 @@ const mockTopExpenses = [
 ];
 
 export function RelatoriosPage() {
+  // Estado para controlar o mês/ano sendo visualizado
+  const hoje = new Date();
+  const mesAtual = hoje.getMonth(); // 0-11
+  const anoAtual = hoje.getFullYear();
+
+  // Buscar dados reais de comparação
+  const { data: comparisonData, isLoading: isLoadingComparison } =
+    useComparisonData({
+      mes: mesAtual,
+      ano: anoAtual,
+    });
+
   const handlePeriodChange = (
     newPeriod: "month" | "quarter" | "year" | "custom"
   ) => {
@@ -158,8 +163,30 @@ export function RelatoriosPage() {
           {/* Despesas por categoria (Pizza) */}
           <ExpensesByCategory data={mockCategoryData} />
 
-          {/* Comparação mês a mês (Barras) */}
-          <ComparisonChart data={mockComparisonData} />
+          {/* Comparação mês a mês (Barras) - DADOS REAIS */}
+          {isLoadingComparison ? (
+            <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6 flex items-center justify-center h-[400px]">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500 mx-auto mb-4"></div>
+                <p className="text-slate-600 dark:text-slate-400">
+                  Carregando comparação...
+                </p>
+              </div>
+            </div>
+          ) : comparisonData && comparisonData.length > 0 ? (
+            <ComparisonChart data={comparisonData} />
+          ) : (
+            <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6 flex items-center justify-center h-[400px]">
+              <div className="text-center">
+                <p className="text-slate-600 dark:text-slate-400 mb-2">
+                  📊 Sem dados para comparação
+                </p>
+                <p className="text-sm text-slate-500">
+                  Adicione transações para ver a comparação entre meses
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Top despesas */}

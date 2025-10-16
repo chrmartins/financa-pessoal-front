@@ -17,6 +17,7 @@ export interface ApiLoginResponse {
     dataCriacao: string;
     dataAtualizacao?: string;
     ultimoAcesso?: string;
+    fotoPerfil?: string | null; // URL da foto do Google OAuth
   };
   token: string; // JWT Access Token
   refreshToken: string; // JWT Refresh Token
@@ -137,13 +138,22 @@ export class AuthService {
         throw new Error("Resposta de login inválida. Tente novamente.");
       }
 
+      // Mapear campo "foto" do backend para "fotoPerfil" do frontend
+      const usuario = {
+        ...data.usuario,
+        fotoPerfil: (data.usuario as any).foto || data.usuario.fotoPerfil,
+      };
+
       // Armazenar tokens
       localStorage.setItem("token", data.token);
       localStorage.setItem("refreshToken", data.refreshToken);
-      localStorage.setItem("usuario", JSON.stringify(data.usuario));
+      localStorage.setItem("usuario", JSON.stringify(usuario));
+
+      console.log("🔍 DEBUG - Usuario após mapeamento:", usuario);
+      console.log("🔍 DEBUG - Foto mapeada:", usuario.fotoPerfil);
 
       return {
-        user: data.usuario,
+        user: usuario,
         token: data.token,
         refreshToken: data.refreshToken,
         expiresIn: data.expiresIn,

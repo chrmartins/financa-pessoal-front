@@ -13,6 +13,7 @@ interface UserState {
     dataCriacao?: string;
     dataAtualizacao?: string;
     ultimoAcesso?: string;
+    fotoPerfil?: string | null; // URL da foto do Google OAuth
   } | null;
   isAuthenticated: boolean;
   token: string | null; // Armazena credenciais Basic Auth (Base64)
@@ -83,6 +84,9 @@ export const useUserStore = create<UserState>()(
             const response: LoginResponse = await AuthService.loginWithGoogle(
               googleToken
             );
+
+            console.log("🔍 DEBUG - Dados do usuário Google:", response.user);
+            console.log("🔍 DEBUG - Foto do perfil:", response.user.fotoPerfil);
 
             setUser(response.user);
             setToken(response.token);

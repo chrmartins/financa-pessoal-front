@@ -100,9 +100,9 @@ export function Footer() {
         <div className="border-t border-slate-800 pt-8 text-center text-slate-400 text-sm">
           <p>
             &copy; {new Date().getFullYear()} NoControle. Todos os direitos
-            reservados. CNPJ: XX.XXX.XXX/0001-XX
+            reservados.
           </p>
-          <p className="mt-2">Feito com ❤️ no Brasil 🇧🇷</p>
+          <p className="mt-2">Feito com ❤️</p>
         </div>
       </div>
     </footer>

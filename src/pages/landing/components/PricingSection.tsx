@@ -67,8 +67,9 @@ export function PricingSection() {
                     <span className="text-3xl text-purple-200 line-through mr-3">
                       R$ 19,90
                     </span>
-                    <span className="text-6xl font-bold text-white">R$ 9</span>
-                    <span className="text-4xl font-bold text-white">,90</span>
+                    <span className="text-6xl font-bold text-white whitespace-nowrap">
+                      R$ 9,90
+                    </span>
                     <span className="text-purple-100 ml-2 text-xl">/mês</span>
                   </div>
                   <p className="text-purple-100 mt-3 text-lg font-medium">
@@ -111,12 +112,6 @@ export function PricingSection() {
                     <p className="flex items-center justify-center space-x-2">
                       <CheckCircle2 className="w-4 h-4 text-green-300" />
                       <span>Cancele quando quiser, sem multas</span>
-                    </p>
-                    <p className="flex items-center justify-center space-x-2">
-                      <CheckCircle2 className="w-4 h-4 text-green-300" />
-                      <span>
-                        Garantia de 7 dias - 100% do seu dinheiro de volta
-                      </span>
                     </p>
                   </div>
                 </div>

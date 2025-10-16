@@ -7,6 +7,7 @@ export interface Usuario {
   dataCriacao: string;
   dataAtualizacao: string | null;
   ultimoAcesso: string | null;
+  fotoPerfil?: string | null; // URL da foto do Google OAuth
 }
 
 export interface CreateUsuarioRequest {

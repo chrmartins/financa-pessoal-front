@@ -124,16 +124,29 @@ function UserProfile() {
     }
   };
 
+  // Debug: verificar se foto está vindo
+  console.log("🔍 LAYOUT DEBUG - Usuário:", user);
+  console.log("🔍 LAYOUT DEBUG - Foto perfil:", user?.fotoPerfil);
+
   return (
     <div className="relative flex items-center gap-3">
       <button
         onClick={() => setShowMenu(!showMenu)}
         className="flex items-center gap-3 hover:opacity-80 transition-opacity"
       >
-        <div className="h-10 w-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-md">
-          <span className="text-sm font-semibold text-white">
-            {user?.nome ? getInitials(user.nome) : "U"}
-          </span>
+        <div className="h-10 w-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-md overflow-hidden">
+          {user?.fotoPerfil ? (
+            <img
+              src={user.fotoPerfil}
+              alt={user.nome || "Usuário"}
+              className="h-full w-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <span className="text-sm font-semibold text-white">
+              {user?.nome ? getInitials(user.nome) : "U"}
+            </span>
+          )}
         </div>
         <div className="hidden sm:flex flex-col items-start">
           <span className="text-sm font-medium text-gray-900 dark:text-gray-100 leading-none">
