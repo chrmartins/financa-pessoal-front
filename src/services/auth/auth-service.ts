@@ -7,6 +7,20 @@ export interface LoginRequest {
   senha: string;
 }
 
+// Interface para o usuário do backend (com campo "foto")
+interface UsuarioBackend {
+  id: string;
+  nome: string;
+  email: string;
+  papel: string;
+  ativo: boolean;
+  dataCriacao: string;
+  dataAtualizacao?: string;
+  ultimoAcesso?: string;
+  foto?: string | null; // Campo do backend
+  fotoPerfil?: string | null; // Campo do frontend
+}
+
 export interface ApiLoginResponse {
   usuario: {
     id: string;
@@ -139,9 +153,10 @@ export class AuthService {
       }
 
       // Mapear campo "foto" do backend para "fotoPerfil" do frontend
+      const usuarioBackend = data.usuario as UsuarioBackend;
       const usuario = {
         ...data.usuario,
-        fotoPerfil: (data.usuario as any).foto || data.usuario.fotoPerfil,
+        fotoPerfil: usuarioBackend.foto || data.usuario.fotoPerfil,
       };
 
       // Armazenar tokens

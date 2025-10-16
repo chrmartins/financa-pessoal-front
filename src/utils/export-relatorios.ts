@@ -2,6 +2,13 @@ import type { CategoryExpenseData } from "@/hooks/queries/transacoes/use-categor
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+// Interface para estender jsPDF com lastAutoTable
+interface jsPDFWithAutoTable extends jsPDF {
+  lastAutoTable: {
+    finalY: number;
+  };
+}
+
 interface MetricasData {
   totalReceitas: number;
   totalDespesas: number;
@@ -112,7 +119,7 @@ export function exportToPDF(data: ExportData): void {
       },
     });
 
-    yPosition = (doc as any).lastAutoTable.finalY + 15;
+    yPosition = (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 15;
   }
 
   // Seção: Despesas por Categoria
@@ -149,7 +156,7 @@ export function exportToPDF(data: ExportData): void {
       },
     });
 
-    yPosition = (doc as any).lastAutoTable.finalY + 15;
+    yPosition = (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 15;
   }
 
   // Seção: Maiores Despesas

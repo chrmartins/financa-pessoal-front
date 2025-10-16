@@ -1,0 +1,32 @@
+{
+  "categorias": [
+    {
+      "id": "cat-alimentacao-id",
+      "nome": "Alimentação",
+      "tipo": "DESPESA",
+      "cor": "#ef4444",
+      "ativa": true
+    },
+    {
+      "id": "cat-assinaturas-id",
+      "nome": "Assinaturas",
+      "tipo": "DESPESA",
+      "cor": "#f59e0b",
+      "ativa": true
+    },
+    {
+      "id": "cat-casa-id",
+      "nome": "Casa",
+      "tipo": "DESPESA",
+      "cor": "#8b5cf6",
+      "ativa": true
+    },
+    {
+      "id": "cat-salario-id",
+      "nome": "Salário",
+      "tipo": "RECEITA",
+      "cor": "#10b981",
+      "ativa": true
+    }
+  ]
+}

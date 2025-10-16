@@ -25,7 +25,10 @@ export function ExpensesByCategory({
     }).format(value);
   };
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: {
+    active?: boolean;
+    payload?: Array<{ name: string; value: number; percent: number }>;
+  }) => {
     if (active && payload && payload.length && data) {
       return (
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 shadow-xl">
@@ -112,8 +115,10 @@ export function ExpensesByCategory({
             outerRadius={100}
             fill="#8884d8"
             dataKey="value"
-            label={({ name, percent }: any) =>
-              `${name} ${(percent * 100).toFixed(0)}%`
+            label={(props: { name?: string; percent?: number }) =>
+              props.name && props.percent
+                ? `${props.name} ${(props.percent * 100).toFixed(0)}%`
+                : ""
             }
           >
             {data.map((entry, index) => (

@@ -1,18 +1,34 @@
 import { Button } from "@/components/ui/button";
 import { useUserStore } from "@/stores/auth/use-user-store";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 // Declaração do tipo global para o Google
+interface GoogleCredentialResponse {
+  credential: string;
+}
+
+interface GoogleConfig {
+  client_id: string;
+  callback: (response: GoogleCredentialResponse) => void;
+}
+
+interface GoogleButtonConfig {
+  theme: string;
+  size: string;
+  text: string;
+  locale: string;
+}
+
 declare global {
   interface Window {
     google?: {
       accounts: {
         id: {
-          initialize: (config: any) => void;
-          renderButton: (element: HTMLElement, config: any) => void;
+          initialize: (config: GoogleConfig) => void;
+          renderButton: (element: HTMLElement, config: GoogleButtonConfig) => void;
           prompt: () => void;
         };
       };
@@ -25,6 +41,32 @@ export function GoogleLoginButton() {
   const { loginWithGoogle } = useUserStore();
   const [isLoading, setIsLoading] = useState(false);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+
+  const handleCredentialResponse = useCallback(async (response: GoogleCredentialResponse) => {
+    try {
+      setIsLoading(true);
+
+      // Usar o serviço de autenticação para fazer login com Google
+      await loginWithGoogle(response.credential);
+
+      toast.success("Login realizado com sucesso!", {
+        description: "Bem-vindo(a) de volta!",
+        duration: 1500,
+      });
+
+      // Redirecionar imediatamente após o login (o estado já foi atualizado)
+      navigate("/dashboard", { replace: true });
+    } catch (error) {
+      console.error("Erro ao fazer login com Google:", error);
+      toast.error("Erro ao fazer login", {
+        description:
+          error instanceof Error
+            ? error.message
+            : "Não foi possível autenticar com o Google. Tente novamente.",
+      });
+      setIsLoading(false);
+    }
+  }, [loginWithGoogle, navigate]);
 
   useEffect(() => {
     // Carregar o script do Google Identity Services
@@ -58,33 +100,7 @@ export function GoogleLoginButton() {
         locale: "pt-BR",
       });
     }
-  }, [isScriptLoaded]);
-
-  const handleCredentialResponse = async (response: any) => {
-    try {
-      setIsLoading(true);
-
-      // Usar o serviço de autenticação para fazer login com Google
-      await loginWithGoogle(response.credential);
-
-      toast.success("Login realizado com sucesso!", {
-        description: "Bem-vindo(a) de volta!",
-        duration: 1500,
-      });
-
-      // Redirecionar imediatamente após o login (o estado já foi atualizado)
-      navigate("/dashboard", { replace: true });
-    } catch (error) {
-      console.error("Erro ao fazer login com Google:", error);
-      toast.error("Erro ao fazer login", {
-        description:
-          error instanceof Error
-            ? error.message
-            : "Não foi possível autenticar com o Google. Tente novamente.",
-      });
-      setIsLoading(false);
-    }
-  };
+  }, [isScriptLoaded, handleCredentialResponse]);
 
   if (!isScriptLoaded) {
     return (
