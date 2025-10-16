@@ -5,6 +5,7 @@ import {
   usePeriodMetrics,
   type PeriodoType,
 } from "@/hooks/queries/transacoes/use-period-metrics";
+import { useTopExpenses } from "@/hooks/queries/transacoes/use-top-expenses";
 import { useState } from "react";
 import {
   ComparisonChart,
@@ -15,90 +16,6 @@ import {
   SummaryCards,
   TopExpenses,
 } from "./components";
-
-// Dados fictícios apenas para componentes ainda não integrados
-const mockTopExpenses = [
-  {
-    id: "1",
-    description: "Aluguel Apartamento",
-    category: "Moradia",
-    amount: 1500,
-    date: "2025-10-05",
-    categoryColor: "#8b5cf6",
-  },
-  {
-    id: "2",
-    description: "Supermercado - Compra Mensal",
-    category: "Alimentação",
-    amount: 650,
-    date: "2025-10-10",
-    categoryColor: "#ef4444",
-  },
-  {
-    id: "3",
-    description: "Gasolina",
-    category: "Transporte",
-    amount: 400,
-    date: "2025-10-08",
-    categoryColor: "#f59e0b",
-  },
-  {
-    id: "4",
-    description: "Academia - Mensalidade",
-    category: "Saúde",
-    amount: 250,
-    date: "2025-10-01",
-    categoryColor: "#10b981",
-  },
-  {
-    id: "5",
-    description: "Restaurante - Jantar",
-    category: "Alimentação",
-    amount: 180,
-    date: "2025-10-12",
-    categoryColor: "#ef4444",
-  },
-  {
-    id: "6",
-    description: "Cinema",
-    category: "Lazer",
-    amount: 120,
-    date: "2025-10-15",
-    categoryColor: "#3b82f6",
-  },
-  {
-    id: "7",
-    description: "Uber/99",
-    category: "Transporte",
-    amount: 95,
-    date: "2025-10-13",
-    categoryColor: "#f59e0b",
-  },
-  {
-    id: "8",
-    description: "Farmácia",
-    category: "Saúde",
-    amount: 85,
-    date: "2025-10-11",
-    categoryColor: "#10b981",
-  },
-  {
-    id: "9",
-    description: "Livros",
-    category: "Educação",
-    amount: 75,
-    date: "2025-10-09",
-    categoryColor: "#06b6d4",
-  },
-  {
-    id: "10",
-    description: "Streaming (Netflix)",
-    category: "Lazer",
-    amount: 45,
-    date: "2025-10-01",
-    categoryColor: "#3b82f6",
-  },
-];
 
 export function RelatoriosPage() {
   // Estado para controlar o período selecionado
@@ -140,6 +57,15 @@ export function RelatoriosPage() {
       periodo: periodoSelecionado,
       dataInicio: customDataInicio,
       dataFim: customDataFim,
+    });
+
+  // Buscar maiores despesas do período selecionado
+  const { data: topExpensesData, isLoading: isLoadingTopExpenses } =
+    useTopExpenses({
+      periodo: periodoSelecionado,
+      dataInicio: customDataInicio,
+      dataFim: customDataFim,
+      limit: 10,
     });
 
   const handlePeriodChange = (newPeriod: PeriodoType) => {
@@ -248,8 +174,8 @@ export function RelatoriosPage() {
           )}
         </div>
 
-        {/* Top despesas */}
-        <TopExpenses data={mockTopExpenses} />
+        {/* Top despesas - DADOS REAIS */}
+        <TopExpenses data={topExpensesData} isLoading={isLoadingTopExpenses} />
 
         {/* Footer com informações */}
         <div className="bg-slate-100 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/50 rounded-xl p-6">

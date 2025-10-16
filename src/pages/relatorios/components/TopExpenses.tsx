@@ -10,10 +10,11 @@ interface ExpenseItem {
 }
 
 interface TopExpensesProps {
-  data: ExpenseItem[];
+  data: ExpenseItem[] | undefined;
+  isLoading: boolean;
 }
 
-export function TopExpenses({ data }: TopExpensesProps) {
+export function TopExpenses({ data, isLoading }: TopExpensesProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -27,6 +28,66 @@ export function TopExpenses({ data }: TopExpensesProps) {
       month: "short",
     });
   };
+
+  // Estado de loading
+  if (isLoading) {
+    return (
+      <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Maiores Despesas
+          </h3>
+          <div className="flex items-center space-x-2 text-gray-600 dark:text-slate-400">
+            <ArrowDown className="w-4 h-4 text-red-400" />
+            <span className="text-sm">Top 10</span>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {[...Array(5)].map((_, index) => (
+            <div
+              key={index}
+              className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg animate-pulse"
+            >
+              <div className="flex items-center space-x-4 flex-1">
+                <div className="w-8 h-8 bg-slate-200 dark:bg-slate-700 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
+                  <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2" />
+                </div>
+              </div>
+              <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-24" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Estado vazio
+  if (!data || data.length === 0) {
+    return (
+      <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Maiores Despesas
+          </h3>
+          <div className="flex items-center space-x-2 text-gray-600 dark:text-slate-400">
+            <ArrowDown className="w-4 h-4 text-red-400" />
+            <span className="text-sm">Top 10</span>
+          </div>
+        </div>
+
+        <div className="text-center py-12 text-gray-600 dark:text-slate-400">
+          <ArrowDown className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <p className="mb-2">Nenhuma despesa encontrada neste período</p>
+          <p className="text-sm">
+            Adicione transações de despesa para ver as maiores aqui
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6">
@@ -85,13 +146,6 @@ export function TopExpenses({ data }: TopExpensesProps) {
           </div>
         ))}
       </div>
-
-      {data.length === 0 && (
-        <div className="text-center py-12 text-gray-600 dark:text-slate-400">
-          <ArrowDown className="w-12 h-12 mx-auto mb-3 opacity-50" />
-          <p>Nenhuma despesa encontrada neste período</p>
-        </div>
-      )}
     </div>
   );
 }
