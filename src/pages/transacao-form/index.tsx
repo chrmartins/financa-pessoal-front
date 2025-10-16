@@ -485,7 +485,31 @@ export function TransacaoFormPage() {
                 <SelectTrigger
                   className={errors.categoriaId ? "border-red-500" : ""}
                 >
-                  <SelectValue placeholder="Selecione uma categoria" />
+                  {watch("categoriaId") ? (
+                    <div className="flex items-center gap-2">
+                      {categoriasFiltradas.find(
+                        (c) => c.id === watch("categoriaId")
+                      )?.cor && (
+                        <div
+                          className="w-3 h-3 rounded-full flex-shrink-0"
+                          style={{
+                            backgroundColor: categoriasFiltradas.find(
+                              (c) => c.id === watch("categoriaId")
+                            )?.cor,
+                          }}
+                        />
+                      )}
+                      <span>
+                        {
+                          categoriasFiltradas.find(
+                            (c) => c.id === watch("categoriaId")
+                          )?.nome
+                        }
+                      </span>
+                    </div>
+                  ) : (
+                    <SelectValue placeholder="Selecione uma categoria" />
+                  )}
                 </SelectTrigger>
                 <SelectContent>
                   {loadingCategorias ? (
@@ -502,7 +526,17 @@ export function TransacaoFormPage() {
                   ) : (
                     categoriasFiltradas.map((categoria) => (
                       <SelectItem key={categoria.id} value={categoria.id}>
-                        {categoria.icone} {categoria.nome}
+                        <div className="flex items-center gap-2">
+                          {categoria.cor && (
+                            <div
+                              className="w-3 h-3 rounded-full flex-shrink-0"
+                              style={{
+                                backgroundColor: categoria.cor,
+                              }}
+                            />
+                          )}
+                          <span>{categoria.nome}</span>
+                        </div>
                       </SelectItem>
                     ))
                   )}
