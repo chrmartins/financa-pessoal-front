@@ -1,39 +1,22 @@
+import { useCategoryExpenses } from "@/hooks/queries/transacoes/use-category-expenses";
 import { useComparisonData } from "@/hooks/queries/transacoes/use-comparison-data";
+import { useMonthlyTrend } from "@/hooks/queries/transacoes/use-monthly-trend";
+import {
+  usePeriodMetrics,
+  type PeriodoType,
+} from "@/hooks/queries/transacoes/use-period-metrics";
+import { useState } from "react";
 import {
   ComparisonChart,
   ExpensesByCategory,
   MonthlyTrend,
+  PeriodDialog,
   ReportHeader,
   SummaryCards,
   TopExpenses,
 } from "./components";
 
-// Dados fictícios para demonstração
-const mockSummaryData = {
-  totalReceitas: 5000,
-  totalDespesas: 3500,
-  saldo: 1500,
-  variacao: 12.5,
-};
-
-const mockCategoryData = [
-  { name: "Alimentação", value: 1200, color: "#ef4444" },
-  { name: "Transporte", value: 800, color: "#f59e0b" },
-  { name: "Moradia", value: 600, color: "#8b5cf6" },
-  { name: "Lazer", value: 400, color: "#3b82f6" },
-  { name: "Saúde", value: 300, color: "#10b981" },
-  { name: "Educação", value: 200, color: "#06b6d4" },
-];
-
-const mockMonthlyData = [
-  { month: "Mai", receitas: 4500, despesas: 3200, saldo: 1300 },
-  { month: "Jun", receitas: 4800, despesas: 3400, saldo: 1400 },
-  { month: "Jul", receitas: 5200, despesas: 3600, saldo: 1600 },
-  { month: "Ago", receitas: 4900, despesas: 3300, saldo: 1600 },
-  { month: "Set", receitas: 5100, despesas: 3500, saldo: 1600 },
-  { month: "Out", receitas: 5000, despesas: 3500, saldo: 1500 },
-];
-
+// Dados fictícios apenas para componentes ainda não integrados
 const mockTopExpenses = [
   {
     id: "1",
@@ -118,10 +101,31 @@ const mockTopExpenses = [
 ];
 
 export function RelatoriosPage() {
-  // Estado para controlar o mês/ano sendo visualizado
+  // Estado para controlar o período selecionado
+  const [periodoSelecionado, setPeriodoSelecionado] =
+    useState<PeriodoType>("quarter");
+
+  // Estados para período personalizado
+  const [periodDialogOpen, setPeriodDialogOpen] = useState(false);
+  const [customDataInicio, setCustomDataInicio] = useState<Date | undefined>();
+  const [customDataFim, setCustomDataFim] = useState<Date | undefined>();
+  const [customPeriodLabel, setCustomPeriodLabel] = useState<string>("");
+
   const hoje = new Date();
   const mesAtual = hoje.getMonth(); // 0-11
   const anoAtual = hoje.getFullYear();
+
+  // Buscar métricas do período selecionado (NOVO - DADOS REAIS)
+  const { data: metricas, isLoading: isLoadingMetricas } = usePeriodMetrics({
+    periodo: periodoSelecionado,
+    dataInicio: customDataInicio,
+    dataFim: customDataFim,
+  });
+
+  // Buscar dados reais de tendência (últimos 12 meses)
+  const { data: trendData, isLoading: isLoadingTrend } = useMonthlyTrend({
+    meses: 12,
+  });
 
   // Buscar dados reais de comparação
   const { data: comparisonData, isLoading: isLoadingComparison } =
@@ -130,11 +134,38 @@ export function RelatoriosPage() {
       ano: anoAtual,
     });
 
-  const handlePeriodChange = (
-    newPeriod: "month" | "quarter" | "year" | "custom"
-  ) => {
-    // Aqui você faria a chamada para buscar novos dados com base no período
-    console.log("Período alterado para:", newPeriod);
+  // Buscar despesas por categoria do período selecionado
+  const { data: categoryData, isLoading: isLoadingCategory } =
+    useCategoryExpenses({
+      periodo: periodoSelecionado,
+      dataInicio: customDataInicio,
+      dataFim: customDataFim,
+    });
+
+  const handlePeriodChange = (newPeriod: PeriodoType) => {
+    setPeriodoSelecionado(newPeriod);
+    // Limpar período personalizado se mudar para outro tipo
+    if (newPeriod !== "custom") {
+      setCustomDataInicio(undefined);
+      setCustomDataFim(undefined);
+      setCustomPeriodLabel("");
+    }
+  };
+
+  const handleApplyCustomPeriod = (dataInicio: Date, dataFim: Date) => {
+    setCustomDataInicio(dataInicio);
+    setCustomDataFim(dataFim);
+    setPeriodoSelecionado("custom");
+
+    // Formatar label
+    const formatDate = (date: Date) => {
+      return date.toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "short",
+      });
+    };
+
+    setCustomPeriodLabel(`${formatDate(dataInicio)} - ${formatDate(dataFim)}`);
   };
 
   const handleExport = () => {
@@ -148,20 +179,48 @@ export function RelatoriosPage() {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header com filtros */}
         <ReportHeader
+          selectedPeriod={periodoSelecionado}
           onPeriodChange={handlePeriodChange}
+          onOpenPeriodDialog={() => setPeriodDialogOpen(true)}
           onExport={handleExport}
+          customPeriodLabel={customPeriodLabel}
         />
 
-        {/* Cards de resumo */}
-        <SummaryCards data={mockSummaryData} />
+        {/* Cards de resumo - DADOS REAIS */}
+        <SummaryCards data={metricas} isLoading={isLoadingMetricas} />
 
-        {/* Gráfico de tendência */}
-        <MonthlyTrend data={mockMonthlyData} />
+        {/* Gráfico de tendência - DADOS REAIS */}
+        {isLoadingTrend ? (
+          <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6 flex items-center justify-center h-[450px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500 mx-auto mb-4"></div>
+              <p className="text-slate-600 dark:text-slate-400">
+                Carregando tendência financeira...
+              </p>
+            </div>
+          </div>
+        ) : trendData && trendData.length > 0 ? (
+          <MonthlyTrend data={trendData} />
+        ) : (
+          <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6 flex items-center justify-center h-[450px]">
+            <div className="text-center">
+              <p className="text-slate-600 dark:text-slate-400 mb-2">
+                📈 Sem dados de tendência
+              </p>
+              <p className="text-sm text-slate-500">
+                Adicione transações para visualizar a tendência financeira
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Grid com 2 colunas */}
         <div className="grid lg:grid-cols-2 gap-6">
-          {/* Despesas por categoria (Pizza) */}
-          <ExpensesByCategory data={mockCategoryData} />
+          {/* Despesas por categoria (Pizza) - DADOS REAIS */}
+          <ExpensesByCategory
+            data={categoryData}
+            isLoading={isLoadingCategory}
+          />
 
           {/* Comparação mês a mês (Barras) - DADOS REAIS */}
           {isLoadingComparison ? (
@@ -209,6 +268,13 @@ export function RelatoriosPage() {
           </div>
         </div>
       </div>
+
+      {/* Diálogo de seleção de período personalizado */}
+      <PeriodDialog
+        open={periodDialogOpen}
+        onClose={() => setPeriodDialogOpen(false)}
+        onApply={handleApplyCustomPeriod}
+      />
     </div>
   );
 }

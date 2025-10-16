@@ -1,25 +1,28 @@
+import type { PeriodoType } from "@/hooks/queries/transacoes/use-period-metrics";
 import { Calendar, Download } from "lucide-react";
-import { useState } from "react";
-
-type PeriodType = "month" | "quarter" | "year" | "custom";
 
 interface ReportHeaderProps {
-  onPeriodChange: (period: PeriodType) => void;
+  selectedPeriod: PeriodoType;
+  onPeriodChange: (period: PeriodoType) => void;
+  onOpenPeriodDialog: () => void;
   onExport: () => void;
+  customPeriodLabel?: string; // Label personalizado quando período custom está ativo
 }
 
-export function ReportHeader({ onPeriodChange, onExport }: ReportHeaderProps) {
-  const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>("month");
-
+export function ReportHeader({
+  selectedPeriod,
+  onPeriodChange,
+  onOpenPeriodDialog,
+  onExport,
+  customPeriodLabel,
+}: ReportHeaderProps) {
   const periods = [
-    { value: "month" as PeriodType, label: "Este Mês" },
-    { value: "quarter" as PeriodType, label: "Trimestre" },
-    { value: "year" as PeriodType, label: "Este Ano" },
-    { value: "custom" as PeriodType, label: "Personalizado" },
+    { value: "month" as PeriodoType, label: "Este Mês" },
+    { value: "quarter" as PeriodoType, label: "Trimestre" },
+    { value: "year" as PeriodoType, label: "Este Ano" },
   ];
 
-  const handlePeriodChange = (period: PeriodType) => {
-    setSelectedPeriod(period);
+  const handlePeriodChange = (period: PeriodoType) => {
     onPeriodChange(period);
   };
 
@@ -57,9 +60,21 @@ export function ReportHeader({ onPeriodChange, onExport }: ReportHeaderProps) {
 
           {/* Botões de Ação */}
           <div className="flex gap-2">
-            <button className="flex items-center space-x-2 px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-900 dark:text-white rounded-lg transition">
+            <button
+              onClick={onOpenPeriodDialog}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
+                selectedPeriod === "custom"
+                  ? "bg-purple-600 hover:bg-purple-700 text-white"
+                  : "bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-gray-900 dark:text-white"
+              }`}
+              title={customPeriodLabel || "Selecionar período personalizado"}
+            >
               <Calendar className="w-4 h-4" />
-              <span className="hidden sm:inline">Período</span>
+              <span className="hidden sm:inline">
+                {selectedPeriod === "custom" && customPeriodLabel
+                  ? customPeriodLabel
+                  : "Período"}
+              </span>
             </button>
 
             <button

@@ -4,14 +4,20 @@ interface CategoryData {
   name: string;
   value: number;
   color: string;
-  [key: string]: string | number;
+  categoriaId?: string;
+  percentage?: number;
+  [key: string]: string | number | undefined;
 }
 
 interface ExpensesByCategoryProps {
-  data: CategoryData[];
+  data: CategoryData[] | undefined;
+  isLoading: boolean;
 }
 
-export function ExpensesByCategory({ data }: ExpensesByCategoryProps) {
+export function ExpensesByCategory({
+  data,
+  isLoading,
+}: ExpensesByCategoryProps) {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -20,7 +26,7 @@ export function ExpensesByCategory({ data }: ExpensesByCategoryProps) {
   };
 
   const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
+    if (active && payload && payload.length && data) {
       return (
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 shadow-xl">
           <p className="text-gray-900 dark:text-white font-semibold">
@@ -42,6 +48,53 @@ export function ExpensesByCategory({ data }: ExpensesByCategoryProps) {
     }
     return null;
   };
+
+  if (isLoading) {
+    return (
+      <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6">
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+          Despesas por Categoria
+        </h3>
+        <div className="flex items-center justify-center h-[300px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500"></div>
+        </div>
+        <div className="mt-6 space-y-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between animate-pulse"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700"></div>
+                <div className="w-24 h-4 bg-slate-200 dark:bg-slate-700 rounded"></div>
+              </div>
+              <div className="w-20 h-4 bg-slate-200 dark:bg-slate-700 rounded"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6">
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+          Despesas por Categoria
+        </h3>
+        <div className="flex items-center justify-center h-[300px]">
+          <div className="text-center">
+            <p className="text-slate-600 dark:text-slate-400 mb-2">
+              📊 Sem despesas neste período
+            </p>
+            <p className="text-sm text-slate-500">
+              Adicione transações de despesa para ver a distribuição
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6">
@@ -73,8 +126,11 @@ export function ExpensesByCategory({ data }: ExpensesByCategoryProps) {
 
       {/* Lista de categorias */}
       <div className="mt-6 space-y-3">
-        {data.map((category, index) => (
-          <div key={index} className="flex items-center justify-between">
+        {data.map((category) => (
+          <div
+            key={category.categoriaId || category.name}
+            className="flex items-center justify-between"
+          >
             <div className="flex items-center space-x-3">
               <div
                 className="w-4 h-4 rounded-full"

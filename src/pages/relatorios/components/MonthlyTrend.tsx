@@ -51,7 +51,7 @@ export function MonthlyTrend({ data }: MonthlyTrendProps) {
   return (
     <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6">
       <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-        Tendência Financeira (6 meses)
+        Tendência Financeira (12 meses)
       </h3>
 
       <ResponsiveContainer width="100%" height={350}>
