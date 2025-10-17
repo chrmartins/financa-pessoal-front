@@ -44,24 +44,6 @@ export function HeroSection() {
               </a>
             </div>
 
-            <div className="flex flex-wrap items-center gap-8 text-sm text-slate-400">
-              <div className="flex items-center space-x-2">
-                <div className="flex -space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 border-2 border-slate-950"></div>
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 border-2 border-slate-950"></div>
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-green-600 border-2 border-slate-950"></div>
-                </div>
-                <span>+10.000 usuários</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <span className="text-yellow-400">★★★★★</span>
-                <span>4.9/5</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <CheckCircle2 className="w-5 h-5 text-green-400" />
-                <span>Grátis para sempre</span>
-              </div>
-            </div>
           </div>
 
           {/* Right: Dashboard Preview */}
