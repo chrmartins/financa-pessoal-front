@@ -1,12 +1,21 @@
-import { useMemo, useState } from "react";
+import { useMonthStore } from "@/stores/ui/use-month-store";
+import { useMemo } from "react";
 
 /**
- * Hook para gerenciar a seleção de mês/ano no dashboard
+ * Hook para gerenciar a seleção de mês/ano
+ * Sincronizado globalmente entre Dashboard e Transações
  */
 export function useMonthSelector() {
   const now = useMemo(() => new Date(), []); // Memoizar para evitar re-renders
-  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState(now.getMonth()); // 0-11
+
+  // Usar a store global ao invés de estado local
+  const {
+    selectedYear,
+    selectedMonth,
+    goToPreviousMonth,
+    goToNextMonth,
+    goToCurrentMonth,
+  } = useMonthStore();
 
   // Calcular datas de início e fim do mês selecionado (memoizado)
   const { dataInicio, dataFim, formattedMonth } = useMemo(() => {
@@ -33,31 +42,6 @@ export function useMonthSelector() {
       formattedMonth: formatted,
     };
   }, [selectedYear, selectedMonth]);
-
-  // Navegação entre meses
-  const goToPreviousMonth = () => {
-    if (selectedMonth === 0) {
-      setSelectedMonth(11);
-      setSelectedYear(selectedYear - 1);
-    } else {
-      setSelectedMonth(selectedMonth - 1);
-    }
-  };
-
-  const goToNextMonth = () => {
-    if (selectedMonth === 11) {
-      setSelectedMonth(0);
-      setSelectedYear(selectedYear + 1);
-    } else {
-      setSelectedMonth(selectedMonth + 1);
-    }
-  };
-
-  const goToCurrentMonth = () => {
-    const today = new Date();
-    setSelectedYear(today.getFullYear());
-    setSelectedMonth(today.getMonth());
-  };
 
   // Verificar se é o mês atual
   const isCurrentMonth =
