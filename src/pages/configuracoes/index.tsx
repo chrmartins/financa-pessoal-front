@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,14 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useUserStore } from "@/stores/auth/use-user-store";
-import { AlertTriangle, Bell, Moon, Shield, Sun, User } from "lucide-react";
+import { Bell, Moon, Shield, Sun, User } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 export function ConfiguracoesPage() {
   const user = useUserStore((state) => state.user);
-  const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(
     document.documentElement.classList.contains("dark")
   );
@@ -174,37 +171,6 @@ export function ConfiguracoesPage() {
               </div>
               <Switch disabled />
             </div>
-          </CardContent>
-        </Card>
-
-        {/* TESTE: Botão para simular página 403 */}
-        <Card className="border-red-200 dark:border-red-900 bg-red-50/50 dark:bg-red-950/20">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
-              </div>
-              <div>
-                <CardTitle className="text-red-700 dark:text-red-400">
-                  Área de Testes
-                </CardTitle>
-                <CardDescription>
-                  Botão temporário para testar a página 403
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Button
-              variant="destructive"
-              onClick={() => navigate("/403")}
-              className="w-full"
-            >
-              🔒 Simular Acesso Não Autorizado (403)
-            </Button>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 text-center">
-              Clique para ver a página de erro 403
-            </p>
           </CardContent>
         </Card>
 
