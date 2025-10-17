@@ -1,16 +1,13 @@
+import { Spinner } from "@/components/ui/spinner";
 import { useUserStore } from "@/stores/auth/use-user-store";
-import type { ReactNode } from "react";
-import { Navigate, useLocation } from "react-router-dom";
-import { Spinner } from "./ui/spinner";
-
-interface ProtectedRouteProps {
-  children: ReactNode;
-}
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 
 /**
- * Componente para proteger rotas que precisam de autenticação
+ * Guard que protege rotas autenticadas
+ * Redireciona para /login se não estiver autenticado
+ * Usa Outlet para renderizar rotas filhas
  */
-export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+export function RouteGuard() {
   const { isAuthenticated, isLoading } = useUserStore();
   const location = useLocation();
 
@@ -39,5 +36,6 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  return <>{children}</>;
-};
+  // Renderiza as rotas filhas (Outlet)
+  return <Outlet />;
+}

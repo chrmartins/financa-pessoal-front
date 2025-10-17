@@ -1,0 +1,9 @@
+{
+  "@tailwindcss/oxide": "*",
+  "@vercel/speed-insights": "*",
+  "core-js": "*",
+  "esbuild": "*",
+  "@esbuild/darwin-arm64": "*",
+  "@esbuild/linux-x64": "*",
+  "@esbuild/win32-x64": "*"
+}

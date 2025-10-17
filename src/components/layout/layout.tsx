@@ -16,14 +16,10 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { toast, Toaster } from "sonner";
 import { Logo } from "./logo.tsx";
-
-interface LayoutProps {
-  children: ReactNode;
-}
 
 interface MenuItem {
   title: string;
@@ -209,7 +205,7 @@ function UserProfile() {
   );
 }
 
-export function Layout({ children }: LayoutProps) {
+export function Layout() {
   const { sidebarOpen, toggleSidebar, isMobile, setIsMobile } = useUIStore();
   const { user } = useUserStore();
   const location = useLocation();
@@ -353,8 +349,11 @@ export function Layout({ children }: LayoutProps) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8 transition-page">
-          {children}
+        <main className="flex-1 py-3 sm:py-4 md:py-6 lg:py-8 transition-page">
+          {/* Container automático - páginas podem sobrescrever se necessário */}
+          <div className="mx-auto w-full max-w-[1600px] px-3 sm:px-4 md:px-6 lg:px-8">
+            <Outlet /> {/* Renderiza as rotas filhas */}
+          </div>
           <SpeedInsights />
         </main>
       </div>
