@@ -1,7 +1,15 @@
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useMonthSelector } from "@/hooks/use-month-selector";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
-import { useMemo } from "react";
+import { ChevronLeft, ChevronRight, Plus, Search, X } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTransacoesList } from "../../hooks/queries/transacoes/use-transacoes-list";
 import { useTransacoesPreview } from "../../hooks/queries/transacoes/use-transacoes-preview";
@@ -27,6 +35,12 @@ function shouldShowPreview(mes: number, ano: number): boolean {
 
 export function Transacoes() {
   const navigate = useNavigate();
+
+  // Estados de busca e filtros
+  const [searchTerm, setSearchTerm] = useState("");
+  const [tipoFiltro, setTipoFiltro] = useState<"TODOS" | "RECEITA" | "DESPESA">(
+    "TODOS"
+  );
 
   // Hook para gerenciar seleção de mês
   const {
@@ -56,7 +70,7 @@ export function Transacoes() {
   // Verificar se devemos mostrar preview neste mês
   const deveExibirPreview = shouldShowPreview(selectedMonth, selectedYear);
 
-  // Combinar transações reais + preview (remover duplicatas)
+  // Combinar transações reais + preview (remover duplicatas) e aplicar filtros
   const transacoesOrdenadas = useMemo(() => {
     const transacoesReais = data?.content || [];
 
@@ -104,6 +118,45 @@ export function Transacoes() {
     });
   }, [data?.content, previewData, deveExibirPreview]);
 
+  // Aplicar filtros de busca e tipo
+  const transacoesFiltradas = useMemo(() => {
+    let resultado = transacoesOrdenadas;
+
+    // Filtro de busca por texto (descrição, categoria ou observações)
+    if (searchTerm.trim()) {
+      const termoBusca = searchTerm.toLowerCase().trim();
+      resultado = resultado.filter((t) => {
+        const descricao = t.descricao?.toLowerCase() || "";
+        const categoria = t.categoria?.nome?.toLowerCase() || "";
+        const observacoes = t.observacoes?.toLowerCase() || "";
+
+        // Busca também por valor formatado (ex: "100" encontra "R$ 100,00")
+        const valorString = t.valor.toString();
+
+        return (
+          descricao.includes(termoBusca) ||
+          categoria.includes(termoBusca) ||
+          observacoes.includes(termoBusca) ||
+          valorString.includes(termoBusca)
+        );
+      });
+    }
+
+    // Filtro por tipo (RECEITA/DESPESA)
+    if (tipoFiltro !== "TODOS") {
+      resultado = resultado.filter((t) => t.tipo === tipoFiltro);
+    }
+
+    return resultado;
+  }, [transacoesOrdenadas, searchTerm, tipoFiltro]);
+
+  // Função para limpar todos os filtros
+  const limparFiltros = () => {
+    setSearchTerm("");
+    setTipoFiltro("TODOS");
+  };
+
+  const temFiltrosAtivos = searchTerm || tipoFiltro !== "TODOS";
   const isLoading = isLoadingReal || isLoadingPreview;
 
   return (
@@ -161,8 +214,87 @@ export function Transacoes() {
         </Button>
       </div>
 
+      {/* Barra de busca e filtros */}
+      <div className="space-y-4">
+        {/* Busca por texto */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Input
+            type="search"
+            placeholder="Buscar por descrição ou categoria..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 pr-9 h-10"
+            autoComplete="off"
+          />
+          {searchTerm && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSearchTerm("")}
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0 hover:bg-muted"
+              aria-label="Limpar busca"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+
+        {/* Filtros */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Filtro por tipo */}
+          <Select
+            value={tipoFiltro}
+            onValueChange={(value: any) => setTipoFiltro(value)}
+          >
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue>
+                {tipoFiltro === "RECEITA" && "💰 Receitas"}
+                {tipoFiltro === "DESPESA" && "💸 Despesas"}
+                {tipoFiltro === "TODOS" && "Todos os tipos"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="TODOS">Todos os tipos</SelectItem>
+              <SelectItem value="RECEITA">💰 Receitas</SelectItem>
+              <SelectItem value="DESPESA">💸 Despesas</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Botão limpar filtros */}
+          {temFiltrosAtivos && (
+            <Button
+              variant="outline"
+              onClick={limparFiltros}
+              className="sm:w-auto w-full"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Limpar Filtros
+            </Button>
+          )}
+        </div>
+
+        {/* Contador de resultados */}
+        {temFiltrosAtivos && (
+          <div className="text-sm text-muted-foreground">
+            {transacoesFiltradas.length === 0 ? (
+              <span>Nenhuma transação encontrada com os filtros aplicados</span>
+            ) : (
+              <span>
+                {transacoesFiltradas.length}{" "}
+                {transacoesFiltradas.length === 1
+                  ? "transação encontrada"
+                  : "transações encontradas"}
+                {transacoesOrdenadas.length > transacoesFiltradas.length &&
+                  ` de ${transacoesOrdenadas.length} no total`}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Lista de transações */}
-      <TransacoesList transacoes={transacoesOrdenadas} isLoading={isLoading} />
+      <TransacoesList transacoes={transacoesFiltradas} isLoading={isLoading} />
     </div>
   );
 }

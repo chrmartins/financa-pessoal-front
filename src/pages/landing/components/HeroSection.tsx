@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle2, TrendingUp, Zap } from "lucide-react";
+import { ArrowRight, TrendingUp, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function HeroSection() {
@@ -43,7 +43,6 @@ export function HeroSection() {
                 Ver Demonstração
               </a>
             </div>
-
           </div>
 
           {/* Right: Dashboard Preview */}

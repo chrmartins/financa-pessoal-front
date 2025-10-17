@@ -1,5 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { UsuarioModal } from "@/components/usuarioModal";
 import { useUsuarioDelete } from "@/hooks/queries/usuarios/use-usuario-delete";
 import { useUsuarioDeletarPermanentemente } from "@/hooks/queries/usuarios/use-usuario-delete-permanente";
@@ -7,7 +15,7 @@ import { useUsuariosList } from "@/hooks/queries/usuarios/use-usuarios-list";
 import { useUserStore } from "@/stores/auth/use-user-store";
 import type { Usuario } from "@/types";
 import { isAxiosError } from "axios";
-import { Plus } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DeleteUsuarioPermanentementeModal } from "./components/DeleteUsuarioPermanentementeModal";
@@ -17,6 +25,13 @@ export default function UsuariosPage() {
   const [selectedUsuario, setSelectedUsuario] = useState<Usuario | null>(null);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [papelFiltro, setPapelFiltro] = useState<"TODOS" | "ADMIN" | "USUARIO">(
+    "TODOS"
+  );
+  const [statusFiltro, setStatusFiltro] = useState<
+    "TODOS" | "ATIVO" | "INATIVO"
+  >("TODOS");
 
   const { user: currentUser } = useUserStore();
   const isAdmin = currentUser?.papel === "ADMIN";
@@ -28,6 +43,47 @@ export default function UsuariosPage() {
     useUsuarioDeletarPermanentemente();
 
   const usuarios = useMemo(() => data ?? [], [data]);
+
+  // Aplicar filtros de busca, papel e status
+  const usuariosFiltrados = useMemo(() => {
+    let resultado = usuarios;
+
+    // Filtro de busca por texto (nome ou e-mail)
+    if (searchTerm.trim()) {
+      const termoBusca = searchTerm.toLowerCase().trim();
+      resultado = resultado.filter((u) => {
+        const nome = u.nome?.toLowerCase() || "";
+        const email = u.email?.toLowerCase() || "";
+
+        return nome.includes(termoBusca) || email.includes(termoBusca);
+      });
+    }
+
+    // Filtro por papel (ADMIN/USUARIO)
+    if (papelFiltro !== "TODOS") {
+      resultado = resultado.filter((u) => u.papel === papelFiltro);
+    }
+
+    // Filtro por status (ATIVO/INATIVO)
+    if (statusFiltro !== "TODOS") {
+      resultado = resultado.filter((u) => {
+        const isAtivo = u.ativo;
+        return statusFiltro === "ATIVO" ? isAtivo : !isAtivo;
+      });
+    }
+
+    return resultado;
+  }, [usuarios, searchTerm, papelFiltro, statusFiltro]);
+
+  // Função para limpar todos os filtros
+  const limparFiltros = () => {
+    setSearchTerm("");
+    setPapelFiltro("TODOS");
+    setStatusFiltro("TODOS");
+  };
+
+  const temFiltrosAtivos =
+    searchTerm || papelFiltro !== "TODOS" || statusFiltro !== "TODOS";
 
   const handleCreate = () => {
     setSelectedUsuario(null);
@@ -136,6 +192,104 @@ export default function UsuariosPage() {
         </Button>
       </div>
 
+      {/* Barra de busca e filtros */}
+      <div className="space-y-4">
+        {/* Busca por texto */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          <Input
+            type="search"
+            placeholder="Buscar por nome ou e-mail..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9 pr-9 h-10"
+            autoComplete="off"
+          />
+          {searchTerm && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSearchTerm("")}
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0 hover:bg-muted"
+              aria-label="Limpar busca"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+
+        {/* Filtros */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          {/* Filtro por papel */}
+          <Select
+            value={papelFiltro}
+            onValueChange={(value: any) => setPapelFiltro(value)}
+          >
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue>
+                {papelFiltro === "ADMIN" && "🔑 Administradores"}
+                {papelFiltro === "USUARIO" && "👤 Usuários"}
+                {papelFiltro === "TODOS" && "Todos os papéis"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="TODOS">Todos os papéis</SelectItem>
+              <SelectItem value="ADMIN">🔑 Administradores</SelectItem>
+              <SelectItem value="USUARIO">👤 Usuários</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Filtro por status */}
+          <Select
+            value={statusFiltro}
+            onValueChange={(value: any) => setStatusFiltro(value)}
+          >
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue>
+                {statusFiltro === "ATIVO" && "✅ Ativos"}
+                {statusFiltro === "INATIVO" && "❌ Inativos"}
+                {statusFiltro === "TODOS" && "Todos os status"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="TODOS">Todos os status</SelectItem>
+              <SelectItem value="ATIVO">✅ Ativos</SelectItem>
+              <SelectItem value="INATIVO">❌ Inativos</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Botão limpar filtros */}
+          {temFiltrosAtivos && (
+            <Button
+              variant="outline"
+              onClick={limparFiltros}
+              className="sm:w-auto w-full"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Limpar Filtros
+            </Button>
+          )}
+        </div>
+
+        {/* Contador de resultados */}
+        {temFiltrosAtivos && (
+          <div className="text-sm text-muted-foreground">
+            {usuariosFiltrados.length === 0 ? (
+              <span>Nenhum usuário encontrado com os filtros aplicados</span>
+            ) : (
+              <span>
+                {usuariosFiltrados.length}{" "}
+                {usuariosFiltrados.length === 1
+                  ? "usuário encontrado"
+                  : "usuários encontrados"}
+                {usuarios.length > usuariosFiltrados.length &&
+                  ` de ${usuarios.length} no total`}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
       {isError ? (
         <Card className="border-destructive/30 bg-destructive/10 text-destructive">
           <CardContent className="py-6">
@@ -146,7 +300,7 @@ export default function UsuariosPage() {
         </Card>
       ) : (
         <UsuariosTable
-          usuarios={usuarios}
+          usuarios={usuariosFiltrados}
           isLoading={isLoading}
           currentUserId={currentUser?.id}
           isAdmin={isAdmin}

@@ -107,7 +107,21 @@ export function useCategoryExpenses(params: UseCategoryExpensesParams) {
         { nome: string; total: number; categoriaId: string }
       >();
 
-      transacoes.content.forEach((transacao) => {
+      // FILTRO ADICIONAL: Garantir que apenas DESPESAS sejam processadas
+      const despesasFiltradas = transacoes.content.filter(
+        (transacao) => transacao.tipo === "DESPESA"
+      );
+
+      // Log para debug (remover em produção)
+      if (transacoes.content.length !== despesasFiltradas.length) {
+        console.warn(
+          `⚠️ Filtro de segurança ativado: ${
+            transacoes.content.length - despesasFiltradas.length
+          } receitas removidas do gráfico de despesas`
+        );
+      }
+
+      despesasFiltradas.forEach((transacao) => {
         if (transacao.categoria) {
           const key = transacao.categoria.id;
           const existing = categorias.get(key);

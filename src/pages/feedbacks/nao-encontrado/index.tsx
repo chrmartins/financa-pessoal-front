@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Home, Search, TrendingDown, Wallet } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export default function NotFoundPage() {
+export default function NaoEncontradoPage() {
   const navigate = useNavigate();
 
   return (

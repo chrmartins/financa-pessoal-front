@@ -91,9 +91,16 @@ api.interceptors.response.use(
     if (error.response) {
       const status = error.response?.status;
 
-      // Trata 401 (Unauthorized) e 403 (Forbidden) como token expirado/inválido
+      // Trata 401 (Unauthorized) - Token expirado/inválido
+      // Trata 403 (Forbidden) - Sem permissão para acessar o recurso
       if ((status === 401 || status === 403) && !originalRequest._retry) {
-        console.error(`🚫 Erro ${status}: Token expirado ou inválido`);
+        console.error(
+          `🚫 Erro ${status}: ${
+            status === 401
+              ? "Token expirado ou inválido"
+              : "Sem permissão para acessar este recurso"
+          }`
+        );
 
         // Não tenta refresh se for a rota de login/refresh
         const isAuthEndpoint =
@@ -105,6 +112,17 @@ api.interceptors.response.use(
           return Promise.reject(error);
         }
 
+        // Se for 403, não tenta refresh - redireciona direto para página de não autorizado
+        if (status === 403) {
+          setTimeout(() => {
+            if (typeof window !== "undefined") {
+              window.location.href = "/nao-autorizado";
+            }
+          }, 500);
+          return Promise.reject(error);
+        }
+
+        // Se for 401, tenta renovar o token
         // Marca que já tentou renovar para evitar loop infinito
         originalRequest._retry = true;
 
@@ -119,9 +137,9 @@ api.interceptors.response.use(
           // Refaz a requisição original com novo token
           return api(originalRequest);
         } catch (refreshError) {
-          console.error("❌ Falha ao renovar token:", refreshError);
+          console.error("❌ Falha ao renovar token (401):", refreshError);
 
-          // Usa função centralizada para logout
+          // Se falhar ao renovar token, faz logout e redireciona para login
           handleSessionExpired();
 
           return Promise.reject(refreshError);
