@@ -28,7 +28,10 @@ declare global {
       accounts: {
         id: {
           initialize: (config: GoogleConfig) => void;
-          renderButton: (element: HTMLElement, config: GoogleButtonConfig) => void;
+          renderButton: (
+            element: HTMLElement,
+            config: GoogleButtonConfig
+          ) => void;
           prompt: () => void;
         };
       };
@@ -42,31 +45,34 @@ export function GoogleLoginButton() {
   const [isLoading, setIsLoading] = useState(false);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
 
-  const handleCredentialResponse = useCallback(async (response: GoogleCredentialResponse) => {
-    try {
-      setIsLoading(true);
+  const handleCredentialResponse = useCallback(
+    async (response: GoogleCredentialResponse) => {
+      try {
+        setIsLoading(true);
 
-      // Usar o serviço de autenticação para fazer login com Google
-      await loginWithGoogle(response.credential);
+        // Usar o serviço de autenticação para fazer login com Google
+        await loginWithGoogle(response.credential);
 
-      toast.success("Login realizado com sucesso!", {
-        description: "Bem-vindo(a) de volta!",
-        duration: 1500,
-      });
+        toast.success("Login realizado com sucesso!", {
+          description: "Bem-vindo(a) de volta!",
+          duration: 1500,
+        });
 
-      // Redirecionar imediatamente após o login (o estado já foi atualizado)
-      navigate("/dashboard", { replace: true });
-    } catch (error) {
-      console.error("Erro ao fazer login com Google:", error);
-      toast.error("Erro ao fazer login", {
-        description:
-          error instanceof Error
-            ? error.message
-            : "Não foi possível autenticar com o Google. Tente novamente.",
-      });
-      setIsLoading(false);
-    }
-  }, [loginWithGoogle, navigate]);
+        // Redirecionar imediatamente após o login (o estado já foi atualizado)
+        navigate("/dashboard", { replace: true });
+      } catch (error) {
+        console.error("Erro ao fazer login com Google:", error);
+        toast.error("Erro ao fazer login", {
+          description:
+            error instanceof Error
+              ? error.message
+              : "Não foi possível autenticar com o Google. Tente novamente.",
+        });
+        setIsLoading(false);
+      }
+    },
+    [loginWithGoogle, navigate]
+  );
 
   useEffect(() => {
     // Carregar o script do Google Identity Services

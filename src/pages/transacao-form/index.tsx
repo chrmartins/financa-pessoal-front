@@ -172,7 +172,13 @@ export function TransacaoFormPage() {
         navigate("/transacoes");
       }, 300);
     }
-  }, [isSuccess, isEditing, navigate, resetCreateMutation, resetUpdateMutation]);
+  }, [
+    isSuccess,
+    isEditing,
+    navigate,
+    resetCreateMutation,
+    resetUpdateMutation,
+  ]);
 
   useEffect(() => {
     if (isError && error) {
@@ -792,7 +798,14 @@ export function TransacaoFormPage() {
                   name="escopo"
                   value="APENAS_ESTA"
                   checked={escopoEdicao === "APENAS_ESTA"}
-                  onChange={(e) => setEscopoEdicao(e.target.value as "APENAS_ESTA" | "DESTA_DATA_EM_DIANTE" | "TODAS")}
+                  onChange={(e) =>
+                    setEscopoEdicao(
+                      e.target.value as
+                        | "APENAS_ESTA"
+                        | "DESTA_DATA_EM_DIANTE"
+                        | "TODAS"
+                    )
+                  }
                   className="mt-1"
                 />
                 <div className="flex-1">
@@ -812,7 +825,14 @@ export function TransacaoFormPage() {
                   name="escopo"
                   value="DESTA_DATA_EM_DIANTE"
                   checked={escopoEdicao === "DESTA_DATA_EM_DIANTE"}
-                  onChange={(e) => setEscopoEdicao(e.target.value as "APENAS_ESTA" | "DESTA_DATA_EM_DIANTE" | "TODAS")}
+                  onChange={(e) =>
+                    setEscopoEdicao(
+                      e.target.value as
+                        | "APENAS_ESTA"
+                        | "DESTA_DATA_EM_DIANTE"
+                        | "TODAS"
+                    )
+                  }
                   className="mt-1"
                 />
                 <div className="flex-1">
@@ -832,7 +852,14 @@ export function TransacaoFormPage() {
                   name="escopo"
                   value="TODAS"
                   checked={escopoEdicao === "TODAS"}
-                  onChange={(e) => setEscopoEdicao(e.target.value as "APENAS_ESTA" | "DESTA_DATA_EM_DIANTE" | "TODAS")}
+                  onChange={(e) =>
+                    setEscopoEdicao(
+                      e.target.value as
+                        | "APENAS_ESTA"
+                        | "DESTA_DATA_EM_DIANTE"
+                        | "TODAS"
+                    )
+                  }
                   className="mt-1"
                 />
                 <div className="flex-1">

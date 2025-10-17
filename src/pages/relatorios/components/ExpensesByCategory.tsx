@@ -25,7 +25,10 @@ export function ExpensesByCategory({
     }).format(value);
   };
 
-  const CustomTooltip = ({ active, payload }: {
+  const CustomTooltip = ({
+    active,
+    payload,
+  }: {
     active?: boolean;
     payload?: Array<{ name: string; value: number; percent: number }>;
   }) => {

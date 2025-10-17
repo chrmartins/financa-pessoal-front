@@ -29,7 +29,11 @@ export function ComparisonChart({ data }: ComparisonChartProps) {
     }).format(value);
   };
 
-  const CustomTooltip = ({ active, payload, label }: {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
     active?: boolean;
     payload?: Array<{ value: number; name: string; color: string }>;
     label?: string;
